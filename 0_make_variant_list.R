@@ -45,5 +45,5 @@ hbf_hits_long <- left_join(hbf_hits_lifted,data.frame(pQTLtools::hg19Tables),by=
 # a more useable form
 data.frame(hbf_hits_long)
 
-write.table(hbf_hits,file=file.path(hbf_dir,"work","hbf_GWAS_top_snps.txt"),row.names=FALSE,quote=FALSE,sep="\t")
+write.table(select(hbf_hits,-seqnames,-start,-end),file=file.path(hbf_dir,"work","hbf_GWAS_top_snps.txt"),row.names=FALSE,quote=FALSE,sep="\t")
 write.table(hbf_hits_long,file=file.path(hbf_dir,"work","hbf_GWAS_top_snps_long.txt"),row.names=FALSE,quote=FALSE,sep="\t")
