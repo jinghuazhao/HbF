@@ -31,7 +31,8 @@ f <- file.path(path.package("pQTLtools"),"eQTL-Catalogue","hg19ToHg38.over.chain
 chain <- rtracklayer::import.chain(f)
 
 hbf_hits_lifted <- liftRegion(select(hbf_hits,seqnames,start,end,REF,ALT),chain) %>%
-                   mutate(snpid=chr_pos_a1_a2(seqnames,start,REF,ALT,prefix=""),snpid38=chr_pos_a1_a2(chr38,start38,REF,ALT,prefix="")) %>%
+                   mutate(snpid=chr_pos_a1_a2(seqnames,start,REF,ALT,prefix=""),
+                          snpid38=if_else(chr38=="NA","NA",chr_pos_a1_a2(chr38,start38,REF,ALT,prefix=""))) %>%
                    left_join(hbf_hits) %>%
                    select(Locus,snpid,snpid38,rs.ID,gene,p) %>%
                    separate_rows(gene, sep=",", convert = TRUE) %>%
