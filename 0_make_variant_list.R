@@ -30,19 +30,18 @@ liftRegion <- function(x,chain)
 f <- file.path(path.package("pQTLtools"),"eQTL-Catalogue","hg19ToHg38.over.chain")
 chain <- rtracklayer::import.chain(f)
 
-hbf_hits_lifted <- liftRegion(select(hbf_hits,seqnames,start,end),chain) %>%
-                   left_join(hbf_hits)
-hbf_hits_long <- separate_rows(hbf_hits, gene, sep=",", convert = TRUE) %>%
-                 mutate(gene=gsub(" ","",gene),snpid=chr_pos_a1_a2(CHR,BP,REF,ALT)) %>%
-                 left_join(data.frame(pQTLtools::hg19Tables),by=c('gene'='geneName')) %>%
-                 select(snpid,names(hbf_hits),acc,X.chrom,chromStart,chromEnd,uniprotName,geneSynonyms,hgncSym,ensGene) %>%
-                 mutate(prot=gsub("_HUMAN","",uniprotName),chr=CHR,start=BP,end=BP) %>%
-                 select(-p.value,-uniprotName)
-hbf_hits_long <- separate_rows(hbf_hits, gene, sep=",", convert = TRUE) %>%
-                 mutate(gene=gsub(" ","",gene),snpid=chr_pos_a1_a2(CHR,BP,REF,ALT)) %>%
-                 select(-seqnames,-start,-end,-p.value) %>%
-                 left_join(select(pQTLtools::SomaLogic160410,-chr,-start,-end),by=c('gene'='entGene')) %>%
-                 select(snpid,rs.ID,b,SE,p,SOMAMER_ID,UniProt,Target,ensGene,extGene)
+hbf_hits_lifted <- liftRegion(select(hbf_hits,seqnames,start,end,REF,ALT),chain) %>%
+                   mutate(snpid=chr_pos_a1_a2(seqnames,start,REF,ALT,prefix=""),snpid38=chr_pos_a1_a2(chr38,start38,REF,ALT,prefix="")) %>%
+                   left_join(hbf_hits) %>%
+                   select(Locus,snpid,snpid38,rs.ID,gene,p) %>%
+                   separate_rows(gene, sep=",", convert = TRUE) %>%
+                   mutate(gene=gsub(" ","",gene))
+hbf_hits_na <- left_join(hbf_hits_lifted,select(pQTLtools::SomaLogic160410,-chr,-start,-end),by=c('gene'='entGene')) %>%
+               select(snpid,rs.ID,SOMAMER_ID,UniProt,Target,ensGene,extGene)
+hbf_hits_long <- left_join(hbf_hits_lifted,data.frame(pQTLtools::hg19Tables),by=c('gene'='geneName')) %>%
+                 select(snpid,names(hbf_hits_lifted),acc,uniprotName,geneSynonyms,hgncSym,ensGene) %>%
+                 mutate(prot=gsub("_HUMAN","",uniprotName)) %>%
+                 select(-uniprotName)
 # a more useable form
 data.frame(hbf_hits_long)
 
