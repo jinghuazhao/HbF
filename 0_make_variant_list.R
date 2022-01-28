@@ -1,4 +1,8 @@
 options(width=2000)
+
+suppressMessages(require(pQTLtools))
+suppressMessages(require(GenomicRanges))
+suppressMessages(require(BiocGenerics))
 require(openxlsx)
 suppressMessages(require(dplyr))
 suppressMessages(require(gap))
@@ -8,16 +12,39 @@ hbf_xlsx <- "hbf_GWAS_top_snps.xlsx"
 if(!dir.exists(file.path(hbf_dir,"work"))) dir.create(file.path(hbf_dir,"work"))
 hbf_hits <- read.xlsx(file.path(hbf_dir,hbf_xlsx),sheet=1,colNames=TRUE,startRow=1,skipEmptyRows=TRUE) %>%
             rename(gene="Candidate.gene(s)",b=X9,p.value="p-value") %>%
-            mutate(p=pvalue(b/SE))
+            mutate(p=pvalue(b/SE),seqnames=paste0("chr",CHR),start=BP,end=BP)
 # only as a reference, chr2:60718043_G_T rs1427407 indicates that it is in GRCh37/hg19 format
 hbf_hits
+
+liftRegion <- function(x,chain)
+{
+  gr <- as(x,"GRanges")
+  seqlevelsStyle(gr) <- "UCSC"
+  gr38 <- rtracklayer::liftOver(gr, chain)
+  chr38 <- as.character(seqnames(gr38))
+  start38 <- as.integer(start(gr38))
+  end38 <- as.integer(end(gr38))
+  invisible(data.frame(x,chr38,start38,end38))
+}
+
+f <- file.path(path.package("pQTLtools"),"eQTL-Catalogue","hg19ToHg38.over.chain")
+chain <- rtracklayer::import.chain(f)
+
+hbf_hits_lifted <- liftRegion(select(hbf_hits,seqnames,start,end),chain) %>%
+                   left_join(hbf_hits)
 hbf_hits_long <- separate_rows(hbf_hits, gene, sep=",", convert = TRUE) %>%
                  mutate(gene=gsub(" ","",gene),snpid=chr_pos_a1_a2(CHR,BP,REF,ALT)) %>%
                  left_join(data.frame(pQTLtools::hg19Tables),by=c('gene'='geneName')) %>%
                  select(snpid,names(hbf_hits),acc,X.chrom,chromStart,chromEnd,uniprotName,geneSynonyms,hgncSym,ensGene) %>%
-                 mutate(prot=gsub("_HUMAN","",uniprotName)) %>%
+                 mutate(prot=gsub("_HUMAN","",uniprotName),chr=CHR,start=BP,end=BP) %>%
                  select(-p.value,-uniprotName)
+hbf_hits_long <- separate_rows(hbf_hits, gene, sep=",", convert = TRUE) %>%
+                 mutate(gene=gsub(" ","",gene),snpid=chr_pos_a1_a2(CHR,BP,REF,ALT)) %>%
+                 select(-seqnames,-start,-end,-p.value) %>%
+                 left_join(select(pQTLtools::SomaLogic160410,-chr,-start,-end),by=c('gene'='entGene')) %>%
+                 select(snpid,rs.ID,b,SE,p,SOMAMER_ID,UniProt,Target,ensGene,extGene)
 # a more useable form
 data.frame(hbf_hits_long)
+
 write.table(hbf_hits,file=file.path(hbf_dir,"work","hbf_GWAS_top_snps.txt"),row.names=FALSE,quote=FALSE,sep="\t")
 write.table(hbf_hits_long,file=file.path(hbf_dir,"work","hbf_GWAS_top_snps_long.txt"),row.names=FALSE,quote=FALSE,sep="\t")
