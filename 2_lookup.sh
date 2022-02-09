@@ -91,6 +91,25 @@ zgrep -w -e rs7772031 -e rs7776054 -e rs9376095 ${deCODE}/12756_3_BACH2_BACH2.tx
 
 # Fenland
 
+export Fenland=${pgwas}/Fenland
+Rscript -e '
+  options(width=200)
+  HbF <- Sys.getenv("HbF")
+  suppressMessages(library(dplyr))
+  ids <- right_join(pQTLtools::SomaScanV4.1,read.delim("work/hbf_GWAS_top_snps_long.txt"),by=c("GeneID"="gene","UniProt.ID"="acc")) %>%
+         mutate(SeqID=gsub("-","_",SeqID),
+                chrpos=gsub("chr|_[A-Z]*","",snpid),
+                region=paste0(chrpos,"-",unlist(lapply(strsplit(chrpos,":"),"[",2)))) %>%
+         select(region,SeqID,UniProt.ID,GeneID,snpid,rs.ID,hgncSym,ensGene) %>%
+         filter(!is.na(SeqID))
+  write.table(ids,col.names=FALSE,row.names=FALSE,quote=FALSE)
+' | \
+parallel -C' ' '
+  echo {1}-{2}-{3}-{4}-{5}-{6}
+  tabix ${Fenland}/all.grch37.tabix.gz {1} | \
+  grep -w {2}
+' > ${HbF}/work/Fenland.tsv
+
 # GTEx, eQTL Catalog
 
 # SCALLOP-CVD1
