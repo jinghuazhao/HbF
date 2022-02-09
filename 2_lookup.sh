@@ -92,6 +92,7 @@ zgrep -w -e rs7772031 -e rs7776054 -e rs9376095 ${deCODE}/12756_3_BACH2_BACH2.tx
 # Fenland
 
 export Fenland=${pgwas}/Fenland
+cat $Fenland/all.grch37.tabix.hdr > ${HbF}/work/Fenland.tsv
 Rscript -e '
   options(width=200)
   HbF <- Sys.getenv("HbF")
@@ -108,23 +109,8 @@ parallel -C' ' '
   echo {1}-{2}-{3}-{4}-{5}-{6}
   tabix ${Fenland}/all.grch37.tabix.gz {1} | \
   grep -w {2}
-' > ${HbF}/work/Fenland.tsv
+' >> ${HbF}/work/Fenland.tsv
 
 # GTEx, eQTL Catalog
 
 # SCALLOP-CVD1
-
-# ~/COVID-19/HbF/work/hbf_GWAS_top_snps_long.txt
-snpid   Locus   snpid38 rs.ID   gene    p       acc     geneSynonyms    hgncSym ensGene prot
-chr2:53993037_T_TTCTTTGGTGCTCCATTGATAAGAGCACCC  1       chr2:53765900_T_TTCTTTGGTGCTCCATTGATAAGAGCACCC  rs148978228     CHAC2   3.93e-15        Q8WUX2     >
-chr2:60718043_G_T       2       chr2:60490908_G_T       rs1427407       BCL11A  3.01e-161       Q9H165  CTIP1; EVI9; KIAA1809; ZNF856   BCL11A  ENSG0000011>
-
-# ${pgwas}/ARIC/seqid.txt
-seqid_in_sample uniprot_id      entrezgenesymbol        chromosome_name transcription_start_site
-SeqId_10000_28  P43320  CRYBB2  22      25212564
-
-# ${pgwas}/AGES/AGES.hdr
-# variant_id	p_value	chromosome	base_pair_location	effect_allele	other_allele	effect_allele_frequency	beta	standard_error
-
-# deCODE
-# Chrom   Pos     Name    rsids   effectAllele    otherAllele     Beta    Pval    minus_log10_pval        SE      N       ImpMAF
