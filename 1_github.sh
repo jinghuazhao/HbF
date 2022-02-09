@@ -1,9 +1,18 @@
 
 #!/usr/bin/bash
 
-git init
-git add README.md ?_*
-git commit -m "HbF"
-git branch -M main
-# git remote add origin git@github.com:jinghuazhao/HbF.git
-git push -u origin main
+function setup()
+{
+  git init
+  git remote add origin git@github.com:jinghuazhao/HbF.git
+}
+
+function send()
+{
+  git add README.md ?_*
+  git commit -m "HbF"
+  git branch -M main
+  git push -u origin main
+}
+
+send
