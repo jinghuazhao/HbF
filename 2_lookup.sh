@@ -32,47 +32,14 @@ cat <(awk -v OFS="\t" '{print "Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
 
 # AGES
 
-export stables=https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-021-27850-z/MediaObjects/41467_2021_27850_MOESM18_ESM.xlsx
-
 R --no-save <<END
-  INF <- Sys.getenv("INF")
   HbF <- Sys.getenv("HbF")
-  pgwas <- Sys.getenv("pgwas")
-  stables <- Sys.getenv("stables")
+  stables <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-021-27850-z/MediaObjects/41467_2021_27850_MOESM18_ESM.xlsx"
   st16 <- openxlsx::read.xlsx(stables, sheet=1, colNames=TRUE, skipEmptyRows=TRUE, startRow=3)
   write.table(st16,file=file.path(HbF,"work","AGES.txt"),col.names=FALSE,quote=FALSE,row.names=FALSE,sep="\t")
-  suppressMessages(library(dplyr))
-  url1 <- "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90086001-GCST90087000"
-  url2 <- "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90087001-GCST90088000"
-  url3 <- "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90088001-GCST90089000"
-  url4 <- "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90089001-GCST90090000"
-  url5 <- "https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90090001-GCST90091000"
-  urls <- mutate(st16, tag=gsub("_",".",Study.tag),
-                 trait=gsub("Serum levels of protein ","",Reported.trait),
-                 Accession=Study.Accession,
-                 SOMAMER_ID=paste0(trait,".",tag)) %>%
-          left_join(pQTLtools::SomaLogic160410) %>%
-          select(Accession,Summary.statistics.file,SOMAMER_ID,UniProt,Target) %>%
-          merge(read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt")),by.x="UniProt",by.y="acc") %>%
-          filter(!is.na(UniProt)) %>%
-          distinct() %>%
-          mutate(url=case_when(
-                                 Accession >= "GCST90086001" & Accession <= "GCST90087000" ~ url1,
-                                 Accession >= "GCST90087001" & Accession <= "GCST90088000" ~ url2,
-                                 Accession >= "GCST90088001" & Accession <= "GCST90089000" ~ url3,
-                                 Accession >= "GCST90089001" & Accession <= "GCST90090000" ~ url4,
-                                 Accession >= "GCST90090001" & Accession <= "GCST90091000" ~ url5,
-                                 TRUE ~ as.character(Accession)
-                              ),
-                 src=file.path(url,Accession),cmd=paste("lftp -c mirror",src))
-  write.table(select(urls,Accession,rs.ID,gene),file=file.path(HbF,"work","AGES.sh"),quote=FALSE,row.names=FALSE)
-  write.table(select(urls,Accession,SOMAMER_ID,UniProt,Target) %>% left_join(select(pQTLtools::inf1,-target),by=c('UniProt'='uniprot')),
-              file=file.path(HbF,"work","links.txt"),quote=FALSE,row.names=FALSE,sep="\t")
-  write.table(select(urls,cmd),file=file.path(HbF,"work","lftp.sh"),quote=FALSE,col.names=FALSE,row.names=FALSE)
 END
 
 cd ${HbF}/work
-bash lftp.sh
 sed '1d' hbf_GWAS_top_snps_long.txt | cut -f5 | sort | uniq | grep -f - -w AGES.txt | cut -f2
 lftp -c mirror https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90086001-GCST90087000/GCST90086395
 lftp -c mirror https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90086001-GCST90087000/GCST90086825
