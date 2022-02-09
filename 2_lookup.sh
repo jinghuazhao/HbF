@@ -46,20 +46,48 @@ lftp -c mirror https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST9
 lfpt -c mirror https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90087001-GCST90088000/GCST90087207
 bgzip GC*/*tsv
 cat ${pgwas}/AGES/AGES.hdr
-sed '1d' ${HbF}/work/AGES.sh | \
+(
+cat <<END
+Accession rs.ID gene
+GCST90086395 rs10128556 HBG1
+GCST90086395 rs398114988 HBG1
+GCST90087207 rs4707609 BACH2
+GCST90086825 rs7772031 MYB
+GCST90086825 rs7776054 MYB
+GCST90086825 rs9376095 MYB
+END
+) | \
+sed '1d' | \
 parallel -C' ' '
+  echo {1}-{2}-{3}
   zgrep -w {2} {1}/{1}_buildGRCh37.tsv.gz
 '
-zgrep -w -e rs7772031 -e rs7776054 -e rs9376095 ${HbF}/work/GCST90086825/GCST90086825_buildGRCh37.tsv.gz
 cd -
 #variant_id      p_value chromosome      base_pair_location      effect_allele   other_allele    effect_allele_frequency beta    standard_error
-#rs4707609       0.0717480331291094      6       90946479        C       T       0.352   0.0340157       0.0188864
+#GCST90086395-rs10128556-HBG1
 #rs10128556      0.919811849322134       11      5263683 T       C       0.3493  -0.00174019     0.0172851
+#GCST90086395-rs398114988-HBG1
+#GCST90086825-rs7772031-MYB
 #rs7772031       0.713143617980774       6       135259734       G       A       0.3357  0.00722091      0.0196404
+#GCST90086825-rs7776054-MYB
 #rs7776054       0.212966846431685       6       135418916       G       A       0.279   0.0257332       0.0206594
+#GCST90086825-rs9376095-MYB
 #rs9376095       0.536243449393508       6       135450755       C       T       0.2279  -0.0136041      0.0219938
+#GCST90087207-rs4707609-BACH2
+#rs4707609       0.0717480331291094      6       90946479        C       T       0.352   0.0340157       0.0188864
 
 # deCODE
+
+export deCODE=${pgwas}/deCODE
+ls ${deCODE} | tr '_' '\t' | cut -f3 | sort | uniq | grep -f <(sed '1d' hbf_GWAS_top_snps_long.txt | cut -f5 | sort | uniq) -w -
+ls ${deCODE} | grep -e MYB_MYB -e BACH2_BACH2 | grep gz
+zgrep -w rs4707609 ${deCODE}/11618_83_MYB_MYB.txt.gz
+zgrep -w -e rs7772031 -e rs7776054 -e rs9376095 ${deCODE}/12756_3_BACH2_BACH2.txt.gz
+# Chrom   Pos     Name    rsids   effectAllele    otherAllele     Beta    Pval    minus_log10_pval        SE      N       ImpMAF
+#chr6    90236760        chr6:90236760:C:T       rs4707609       C       T       0.0172  0.037333        1.42791 0.008261        35335   0.34794
+#chr6    134938596       chr6:134938596:A:G      rs7772031       A       G       -0.0087 0.296918        0.52736 0.008341        35363   0.32928
+#chr6    135097778       chr6:135097778:G:A      rs7776054       G       A       0.0241  0.006332        2.19846 0.008828        35363   0.27214
+#chr6    135129617       chr6:135129617:C:T      rs9376095       C       T       0.0020  0.833272        0.07921 0.009501        35363   0.22820
 
 # Fenland
 
@@ -80,3 +108,4 @@ SeqId_10000_28  P43320  CRYBB2  22      25212564
 # variant_id	p_value	chromosome	base_pair_location	effect_allele	other_allele	effect_allele_frequency	beta	standard_error
 
 # deCODE
+# Chrom   Pos     Name    rsids   effectAllele    otherAllele     Beta    Pval    minus_log10_pval        SE      N       ImpMAF
