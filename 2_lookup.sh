@@ -97,7 +97,7 @@ Rscript -e '
   options(width=200)
   HbF <- Sys.getenv("HbF")
   suppressMessages(library(dplyr))
-  ids <- right_join(pQTLtools::SomaScanV4.1,read.delim("work/hbf_GWAS_top_snps_long.txt"),by=c("GeneID"="gene","UniProt.ID"="acc")) %>%
+  ids <- right_join(pQTLtools::SomaScanV4.1,read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt")),by=c("GeneID"="gene","UniProt.ID"="acc")) %>%
          mutate(SeqID=gsub("-","_",SeqID),
                 chrpos=gsub("chr|_[A-Z]*","",snpid),
                 region=paste0(chrpos,"-",unlist(lapply(strsplit(chrpos,":"),"[",2)))) %>%
@@ -128,3 +128,18 @@ parallel -C' ' '
 # GTEx, eQTL Catalog
 
 # SCALLOP-CVD1
+
+Rscript -e '
+  options(width=200)
+  HbF <- Sys.getenv("HbF")
+  stables <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs42255-020-00287-2/MediaObjects/42255_2020_287_MOESM3_ESM.xlsx"
+  st1 <- openxlsx::read.xlsx(stables, sheet=1, colNames=TRUE, skipEmptyRows=TRUE, cols=c(1:23), rows=c(3:95))
+  write.table(st1[c("UniProt.ID","Gene","Short_annotation","Long.name")],file=file.path(HbF,"work","cvd1.txt"),
+              col.names=FALSE,quote=FALSE,row.names=FALSE,sep="\t")
+  suppressMessages(library(dplyr))
+  ids <- merge(st1[1:4],read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[c("snpid","gene","acc","rs.ID")],
+               by.x=c("Gene"),by.y=c("gene")) %>%
+         select(Short_annotation,UniProt.ID,Gene,snpid,rs.ID)
+  write.table(ids,col.names=FALSE,row.names=FALSE,quote=FALSE)
+  st1[[2]] %in% read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[["gene"]]
+'
