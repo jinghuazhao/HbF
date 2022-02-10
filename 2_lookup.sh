@@ -159,7 +159,35 @@ Rscript -e '
   overlap
 '
 
-# GTEx, eQTL Catalog
-
 # deCODE, BACH2 - chr6:135097778:G:A      rs7776054
 # Fenland, MYB - rs9376095       chr6:135450755_C_T      t       c       0.7700  0.0035  0.7681  0.7805  11618_83        0.0375  0.0162  0.02076
+
+# GTEx, eQTL Catalog
+
+export GTEx=~/rds/public_databases/GTEx/csv
+export eQTLCatalogue=~/rds/public_databases/eQTLCatalogue
+
+Rscript -e '
+  options(width=200)
+  GTEx <- Sys.getenv("GTEx")
+  eQTLCatalogue <- Sys.getenv("eQTLCatalogue")
+  HbF <- Sys.getenv("HbF")
+  suppressMessages(library(dplyr))
+  GTEx_files <- setdiff(dir(GTEx),c("coloc","www"))
+  GTEx_tissues <- unique(gsub(".tsv.gz|.tbi","",GTEx_files))
+  eQTLCatalogue_files <- dir(eQTLCatalogue)
+  eQTLCatalogue_tissues <- unique(gsub(".all.tsv.gz|.tbi","",eQTLCatalogue_files))
+  all_files <- c(file.path(GTEx,paste0(GTEx_tissues,".tsv.gz")),file.path(eQTLCatalogue,paste0(eQTLCatalogue_tissues,".all.tsv.gz")))
+  all_names <- c(GTEx_tissues,eQTLCatalogue_tissues)
+  all_indices <- 1:length(all_names)
+  write.table(cbind(all_indices,all_names,all_files),row.names=FALSE,col.names=FALSE,quote=FALSE)
+' | \
+parallel -C' ' --env HbF '
+  echo {1} {2} {3}
+  sed "1d" ${HbF}/work/hbf_GWAS_top_snps_long.txt | cut -f1,4,5,10 | \
+  awk "{gsub(/chr|_[A-Z]*/,\"\",\$1);split(\$1,a,\":\");\$1=\$1\"-\"a[2]};1" | \
+  while read -r region rsid gene ensGene
+  do
+     tabix {3} ${region} | awk -vensGene=${ensGene} "index(\$1,ensGene)||index(\$4,ensGene)"
+  done
+' > ${HbF}/work/eQTL.tsv
