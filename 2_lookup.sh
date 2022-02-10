@@ -3,7 +3,7 @@
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
 
-# ARIC, https://sites.cscc.unc.edu/aric/
+#ARIC, https://sites.cscc.unc.edu/aric/
 
 cat <(awk -v OFS="\t" '{print "Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
     <(
@@ -30,7 +30,7 @@ cat <(awk -v OFS="\t" '{print "Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
 #MYB     6       135097778       rs7776054       A       G       G       0.269721        ADD     7213    0.0292828       0.0187838       1.55894 0.119054   .
 #MYB     6       135129617       rs9376095       T       C       C       0.23118 ADD     7213    0.0152785       0.0197551       0.773394        0.439315   .
 
-# AGES
+#AGES
 
 R --no-save <<END
   HbF <- Sys.getenv("HbF")
@@ -76,7 +76,7 @@ cd -
 #GCST90087207-rs4707609-BACH2
 #rs4707609       0.0717480331291094      6       90946479        C       T       0.352   0.0340157       0.0188864
 
-# deCODE
+#deCODE
 
 export deCODE=${pgwas}/deCODE
 ls ${deCODE} | tr '_' '\t' | cut -f3 | sort | uniq | grep -f <(sed '1d' hbf_GWAS_top_snps_long.txt | cut -f5 | sort | uniq) -w -
@@ -89,7 +89,7 @@ zgrep -w -e rs7772031 -e rs7776054 -e rs9376095 ${deCODE}/12756_3_BACH2_BACH2.tx
 #chr6    135097778       chr6:135097778:G:A      rs7776054       G       A       0.0241  0.006332        2.19846 0.008828        35363   0.27214
 #chr6    135129617       chr6:135129617:C:T      rs9376095       C       T       0.0020  0.833272        0.07921 0.009501        35363   0.22820
 
-# Fenland
+#Fenland
 
 export Fenland=${pgwas}/Fenland
 cat $Fenland/all.grch37.tabix.hdr > ${HbF}/work/Fenland.tsv
@@ -125,7 +125,7 @@ parallel -C' ' '
 #6:135259734-135259734-11618_83-P10242-MYB-chr6:135259734_A_G-rs7772031
 
 
-# SCALLOP-CVD1
+#SCALLOP-CVD1
 
 Rscript -e '
   options(width=200)
@@ -142,7 +142,7 @@ Rscript -e '
   st1[[2]] %in% read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[["gene"]]
 '
 
-# LBC1936
+#LBC1936
 
 Rscript -e '
   options(width=200)
@@ -159,10 +159,7 @@ Rscript -e '
   overlap
 '
 
-# deCODE, BACH2 - chr6:135097778:G:A      rs7776054
-# Fenland, MYB - rs9376095       chr6:135450755_C_T      t       c       0.7700  0.0035  0.7681  0.7805  11618_83        0.0375  0.0162  0.02076
-
-# GTEx, eQTL Catalog
+#GTEx, eQTL Catalog
 
 export GTEx=~/rds/public_databases/GTEx/csv
 export eQTLCatalogue=~/rds/public_databases/eQTLCatalogue
@@ -193,7 +190,7 @@ parallel -C' ' --env HbF '
 ' > ${HbF}/work/eQTL.tsv
 awk '$3<1e-5' ${HbF}/work/eQTL.tsv | grep -v gz
 
-# INTERVAL
+#INTERVAL
 
 export INTERVAL=~/rds/results/public/proteomics/somalogic/sun_2018/raw_results/meta
 
@@ -206,3 +203,5 @@ cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.g
       tabix ${INTERVAL}/HBG1.10665.30.3/HBG1.10665.30.3_chrom_11_meta_1.tbl.gz 11:5242453-5242453
       tabix ${INTERVAL}/HBG1.10665.30.3/HBG1.10665.30.3_chrom_11_meta_1.tbl.gz 11:5272002-5272002
      )
+
+grep '#' 2_lookup.sh | sed 's/#//'
