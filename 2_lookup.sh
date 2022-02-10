@@ -125,8 +125,6 @@ parallel -C' ' '
 #6:135259734-135259734-11618_83-P10242-MYB-chr6:135259734_A_G-rs7772031
 
 
-# GTEx, eQTL Catalog
-
 # SCALLOP-CVD1
 
 Rscript -e '
@@ -143,3 +141,22 @@ Rscript -e '
   write.table(ids,col.names=FALSE,row.names=FALSE,quote=FALSE)
   st1[[2]] %in% read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[["gene"]]
 '
+
+# LBC1936
+
+Rscript -e '
+  options(width=200)
+  suppressMessages(library(dplyr))
+  library(pQTLtools)
+  HbF <- Sys.getenv("HbF")
+  neu <- subset(Olink_qPCR,Panel=="Neurology")
+  target <- neu[["Target"]]
+  s <- stringr::str_locate(target,"[(]")[,1]+1
+  e <- stringr::str_locate(target,"[)]")[,1]-1
+  target.short <- substr(target,s,e)
+  target.short <- gsub(" |-","_",target.short)
+  overlap <- merge(neu,read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[c("snpid","gene","acc","rs.ID")],by="gene")
+  overlap
+'
+
+# GTEx, eQTL Catalog
