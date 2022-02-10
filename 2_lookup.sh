@@ -160,3 +160,6 @@ Rscript -e '
 '
 
 # GTEx, eQTL Catalog
+
+# deCODE, BACH2 - chr6:135097778:G:A      rs7776054
+# Fenland, MYB - rs9376095       chr6:135450755_C_T      t       c       0.7700  0.0035  0.7681  0.7805  11618_83        0.0375  0.0162  0.02076
