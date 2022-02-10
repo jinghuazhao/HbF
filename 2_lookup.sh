@@ -191,3 +191,18 @@ parallel -C' ' --env HbF '
      tabix {3} ${region} | awk -vensGene=${ensGene} "index(\$1,ensGene)||index(\$4,ensGene)"
   done
 ' > ${HbF}/work/eQTL.tsv
+awk '$3<1e-5' ${HbF}/work/eQTL.tsv | grep -v gz
+
+# INTERVAL
+
+export INTERVAL=~/rds/results/public/proteomics/somalogic/sun_2018/raw_results/meta
+
+awk -vOFS="\t" 'NR>1{gsub(/chr|:[0-9]*|_[A-Z]*/,"",$1);print}' ${HbF}/work/hbf_GWAS_top_snps_long.txt | cut -f1,5 | tr '\t' ' ' | \
+parallel -C' ' --env INTERVAL 'ls ${INTERVAL}/{2}.*/{2}.*chrom_{1}* | grep -v -e tbi -e info' > ${HbF}/work/INTERVAL.lst
+
+cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.gz | head -1) \
+    <(
+      tabix ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.gz 6:90236760-90236760
+      tabix ${INTERVAL}/HBG1.10665.30.3/HBG1.10665.30.3_chrom_11_meta_1.tbl.gz 11:5242453-5242453
+      tabix ${INTERVAL}/HBG1.10665.30.3/HBG1.10665.30.3_chrom_11_meta_1.tbl.gz 11:5272002-5272002
+     )
