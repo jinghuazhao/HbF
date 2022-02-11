@@ -164,6 +164,7 @@ Rscript -e '
 export GTEx=~/rds/public_databases/GTEx/csv
 export eQTLCatalogue=~/rds/public_databases/eQTLCatalogue
 
+gunzip -c $GTEx/Whole_Blood.tsv.gz | head -1 > ${HbF}/work/eQTL.tsv
 Rscript -e '
   options(width=200)
   GTEx <- Sys.getenv("GTEx")
@@ -187,8 +188,27 @@ parallel -C' ' --env HbF '
   do
      tabix {3} ${region} | awk -vensGene=${ensGene} "index(\$1,ensGene)||index(\$4,ensGene)"
   done
-' > ${HbF}/work/eQTL.tsv
+' >> ${HbF}/work/eQTL.tsv
+Rscript -e '
+  options(width=200)
+  HbF <- Sys.getenv("HbF")
+  suppressMessages(library(dplyr))
+  eQTL <- read.delim(file.path(HbF,"work","eQTL.tsv"))
+  results <- filter(eQTL,!is.na(pvalue) & pvalue<=0.05) %>%
+             select(variant,pvalue,molecular_trait_object_id,beta,se,chromosome,position,type,rsid)
+  write.table(results,row.names=FALSE,quote=FALSE,sep="\t")
+'
 awk '$3<1e-5' ${HbF}/work/eQTL.tsv | grep -v gz
+
+#variant pvalue  molecular_trait_object_id       beta    se      chromosome      position        type    rsid
+#Brain_Hypothalamus
+#chr6_90946479_T_TA      0.025515        ENSG00000112182 -0.167097       0.0739524       6       90946479        INDEL   rs76787307
+#Brain_Substantia_nigra
+#chr6_90946479_T_TA      0.0266003       ENSG00000112182 0.187447        0.0831331       6       90946479        INDEL   rs76787307
+#Ovary
+#chr6_90946479_T_TA      0.034979        ENSG00000112182 -0.1029 0.0482772       6       90946479        INDEL   rs76787307
+#Testis
+#chr6_90946479_T_TA      0.045364        ENSG00000112182 -0.0962325      0.0478606       6       90946479        INDEL   rs76787307
 
 #INTERVAL
 
