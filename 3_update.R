@@ -8,7 +8,7 @@ export M=1e6
 ls ${pgwas}/ARIC/EA/*gz | parallel -C' ' -j15 'tabix -S1 -s1 -b2 -e2 -f {}'
 cat <(awk -v OFS="\t" '{print "Somamer","Uniprot","Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -28,6 +28,28 @@ cat <(awk -v OFS="\t" '{print "Somamer","Uniprot","Gene",$0}' ${pgwas}/ARIC/glm.
       ) > ${HbF}/work/ARIC.tsv
 
 #AGES
+
+cd ${pgwas}/AGES
+(
+cat <<END
+GCST90086001-GCST90087000
+GCST90087001-GCST90088000
+GCST90088001-GCST90089000
+GCST90089001-GCST90090000
+GCST90090001-GCST90091000
+END
+) | \
+parallel -C' ' -j15 '
+  lftp -c mirror https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/{}
+'
+for section in GCST90086001-GCST90087000 GCST90087001-GCST90088000 GCST90088001-GCST90089000 GCST90089001-GCST90090000 GCST90090001-GCST90091000
+do
+   mv ${section}/GC* ..
+done
+
+ls GC*/*tsv | parallel -C' ' -j15 'bgzip {}'
+ls GC*/*gz | parallel -C' ' -j15 'tabix -S1 -s3 -b4 -e4 -f {}'
+cd -
 
 R --no-save <<END
   HbF <- Sys.getenv("HbF")
