@@ -2,33 +2,30 @@
 
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
+export M=1e6
 
-#ARIC, https://sites.cscc.unc.edu/aric/
-
-cat <(awk -v OFS="\t" '{print "Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
+#ARIC, https://sites.cscc.unc.edu/aric/, build 38
+ls ${pgwas}/ARIC/EA/*gz | parallel -C' ' -j15 'tabix -S1 -s1 -b2 -e2 -f {}'
+cat <(awk -v OFS="\t" '{print "Somamer","Uniprot","Gene",$0}' ${pgwas}/ARIC/glm.linear.hdr) \
     <(
-       Rscript -e '
-       options(width=200)
-       suppressMessages(library(dplyr))
-       HbF <- Sys.getenv("HbF")
-       pgwas <- Sys.getenv("pgwas")
-       snps <- read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt")) %>%
-               left_join(read.delim(file.path(pgwas,"ARIC","seqid.txt")),by=c("acc"="uniprot_id")) %>%
-               select(seqid_in_sample,acc,entrezgenesymbol,snpid,snpid38,rs.ID,gene) %>%
-               subset(!is.na(seqid_in_sample))
-       write.table(select(snps,seqid_in_sample,rs.ID,gene),col.names=FALSE,row.names=FALSE,quote=FALSE)
-       ' | \
-       parallel -C' ' --env pgwas '
-         zgrep -w {2} ${pgwas}/ARIC/EA/{1}.PHENO1.glm.linear.gz | \
-         awk -v gene={3} -v OFS="\t" "{print gene,\$0}"
-       '
-     )
-
-#Gene    #CHROM  POS     ID      REF     ALT     A1      A1_FREQ TEST    OBS_CT  BETA    SE      T_STAT  P       ERRCODE
-#BACH2   6       90236760        rs4707609       T       C       C       0.351865        ADD     7213    0.0144076       0.0174087       0.827607        0.40792     .
-#MYB     6       134938596       rs7772031       G       A       G       0.36961 ADD     7213    0.0103618       0.0172359       0.601175        0.547742   .
-#MYB     6       135097778       rs7776054       A       G       G       0.269721        ADD     7213    0.0292828       0.0187838       1.55894 0.119054   .
-#MYB     6       135129617       rs9376095       T       C       C       0.23118 ADD     7213    0.0152785       0.0197551       0.773394        0.439315   .
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | \
+       while read -r chr pos rsid snpid gene
+       do
+          export chr=${chr}
+          export pos=${pos}
+          export rsid=${rsid}
+          export snpid=${snpid}
+          export gene=${gene}
+          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
+          sed '1d' ${pgwas}/ARIC/seqid.txt | cut -f1-3 | tr '\t' ' ' | \
+          parallel -C' ' -j15 --env pgwas --env rsid --env snpid --env gene=${gene} '
+             tabix ${pgwas}/ARIC/EA/{1}.PHENO1.glm.linear.gz ${region} | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v uniprot={2} -v symbol={3} -v OFS="\t" "
+                 \$13<=1e-5{print rsid,snpid,gene,somamer,uniprot,symbol,\$0}
+             "
+          '
+        done
+      ) > ${HbF}/work/ARIC.tsv
 
 #AGES
 
