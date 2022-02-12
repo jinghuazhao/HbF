@@ -140,7 +140,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Symbol","Prot",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          cat ${HbF}/work/scallop-cvd1.txt | \
+          grep -v -w -e BNP -e IL4 ${HbF}/work/scallop-cvd1.txt | \
           parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
              gunzip -c ${scallop_cvd1}/{3}.txt.gz | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v symbol={2} -v prot={3} \
