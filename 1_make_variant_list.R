@@ -49,11 +49,11 @@ data.frame(hbf_hits_long)
 write.table(select(hbf_hits,-seqnames,-start,-end),file=file.path(hbf_dir,"work","hbf_GWAS_top_snps.txt"),row.names=FALSE,quote=FALSE,sep="\t")
 write.table(hbf_hits_long,file=file.path(hbf_dir,"work","hbf_GWAS_top_snps_long.txt"),row.names=FALSE,quote=FALSE,sep="\t")
 
-hbf_hits_updated <- liftRegion(select(hbf_hits,seqnames,start,end,REF,ALT),chain) %>%
-                    mutate(snpid=chr_pos_a1_a2(seqnames,start,REF,ALT,prefix=""),
-                           snpid38=if_else(chr38=="NA","NA",chr_pos_a1_a2(chr38,start38,REF,ALT,prefix=""))) %>%
-                    left_join(hbf_hits) %>%
-                    mutate(pos38=start38) %>%
-                    arrange(CHR,BP) %>%
-                    select(CHR,BP,pos38,rs.ID,,REF,ALT,b,SE,p,Locus,snpid,snpid38,gene)
-write.table(hbf_hits_updated,file=file.path(hbf_dir,"work","hbf_hits.txt"),row.names=FALSE,quote=FALSE,sep="\t")
+hbf_hits_region <- liftRegion(select(hbf_hits,seqnames,start,end,REF,ALT),chain) %>%
+                   mutate(snpid=chr_pos_a1_a2(seqnames,start,REF,ALT,prefix=""),
+                          snpid38=if_else(chr38=="NA","NA",chr_pos_a1_a2(chr38,start38,REF,ALT,prefix=""))) %>%
+                   left_join(hbf_hits) %>%
+                   mutate(pos38=start38) %>%
+                   arrange(CHR,BP) %>%
+                   select(CHR,BP,pos38,rs.ID,,REF,ALT,b,SE,p,Locus,snpid,snpid38,gene)
+write.table(hbf_hits_region,file=file.path(hbf_dir,"work","hbf_hits.txt"),row.names=FALSE,quote=FALSE,sep="\t")

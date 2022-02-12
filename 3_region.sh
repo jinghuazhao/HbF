@@ -49,6 +49,10 @@ do
 done
 ls GC*/*tsv | parallel -C' ' -j15 'bgzip {}'
 ls GC*/*gz | parallel -C' ' -j15 'tabix -S1 -s3 -b4 -e4 -f {}'
+mdir ${AGES}/excluded
+cut -f2 ${AGES}/work/AGES.txt | grep -f - -v -w <(ls $AGES/) | parallel -C' ' --env AGES 'mv ${AGES}/{} ${AGES}/excluded'
+mv excluded/loc* excluded/Olink-* excluded/README.* excluded/AGES.hdr .
+ls Olink-INF | parallel -C' ' 'rm -rf Olink-INF/{}; ln -fs {} Olink-INF/{}'
 cd -
 
 R --no-save <<END
