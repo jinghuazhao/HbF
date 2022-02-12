@@ -118,12 +118,8 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene",$0}' ${Fenland}/all.grch37.t
           export snpid=${snpid}
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
-          ls ${deCODE}/*gz | sed 's/.txt/gz/' | \
-          parallel -C' ' -j15 --env Fenland --env region '
-             tabix ${Fenland}/all.grch37.tabix.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v OFS="\t" "
-                 \$14<=1e-5{print rsid,snpid,gene,\$0}"
-          '
+          tabix ${Fenland}/all.grch37.tabix.gz ${region} | \
+          awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v OFS="\t" "\$14<=1e-5{print rsid,snpid,gene,\$0}"
        done
      ) > ${HbF}/work/Fenland.tsv
 
