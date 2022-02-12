@@ -52,6 +52,7 @@ ls GC*/*gz | parallel -C' ' -j15 'tabix -S1 -s3 -b4 -e4 -f {}'
 mdir ${AGES}/excluded
 cut -f2 ${AGES}/work/AGES.txt | grep -f - -v -w <(ls $AGES/) | parallel -C' ' --env AGES 'mv ${AGES}/{} ${AGES}/excluded'
 mv excluded/loc* excluded/Olink-* excluded/README.* excluded/AGES.hdr .
+rm -rf ${AGES}/excluded
 ls Olink-INF | parallel -C' ' 'rm -rf Olink-INF/{}; ln -fs {} Olink-INF/{}'
 cd -
 
@@ -85,7 +86,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0
 
 #deCODE
 export deCODE=${pgwas}/deCODE
-cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0}' ${AGES}/AGES.hdr) \
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.hdr) \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
@@ -95,7 +96,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          ls ${deCODE}/*gz | sed 's/.txt.gz//' | \
+          ls ${deCODE}/*gz | xargs -l basename | sed 's/.txt.gz//' | \
           parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
              gunzip -c ${deCODE}/{}.txt.gz | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v chr=chr${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
