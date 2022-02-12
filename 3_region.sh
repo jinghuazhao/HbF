@@ -124,13 +124,13 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene",$0}' ${Fenland}/all.grch37.t
      ) > ${HbF}/work/Fenland.tsv
 
 #SCALLOP-CVD1
-export cvd1=${pgwas}/scallop-cvd1
+export scallop_cvd1=${pgwas}/scallop-cvd1
 Rscript -e '
   options(width=200)
   HbF <- Sys.getenv("HbF")
   stables <- "https://static-content.springer.com/esm/art%3A10.1038%2Fs42255-020-00287-2/MediaObjects/42255_2020_287_MOESM3_ESM.xlsx"
   st1 <- openxlsx::read.xlsx(stables, sheet=1, colNames=TRUE, skipEmptyRows=TRUE, cols=c(1:23), rows=c(3:95))
-  write.table(st1[c("UniProt.ID","Gene","Short_annotation")],file=file.path(HbF,"work","cvd1.txt"),col.names=FALSE,quote=FALSE,row.names=FALSE)
+  write.table(st1[c("UniProt.ID","Gene","Short_annotation")],file=file.path(HbF,"work","scallop_cvd1.txt"),col.names=FALSE,quote=FALSE,row.names=FALSE)
 '
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Symbol","Prot",$0}' ${AGES}/AGES.hdr) \
     <(
@@ -142,16 +142,15 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Symbol","Prot",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          cat ${HbF}/work/cvd1.txt | \
+          cat ${HbF}/work/scallop_cvd1.txt | \
           parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
-             gunzip -c ${cvd1}/{3}.gz | \
+             gunzip -c ${scallop_cvd1}/{3}.gz | xargs -l basename | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v symbol={2} -v prot={3} \
                  -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
                  {split($1,a,":");if(\$8<=1e-5&&a[1]==chr&&a[2]>=pos-M&&a[2]<pos+M){print rsid,snpid,gene,somamer,symbol,prot,\$0}"
           '
        done
      ) > ${HbF}/work/scallop-cvd1.tsv
-
 
 #LBC1936
 export LBC1936=${pgwas}/LBC1936
@@ -160,15 +159,31 @@ Rscript -e '
   suppressMessages(library(dplyr))
   library(pQTLtools)
   HbF <- Sys.getenv("HbF")
-  neu <- subset(Olink_qPCR,Panel=="Neurology")
-  target <- neu[["Target"]]
-  s <- stringr::str_locate(target,"[(]")[,1]+1
-  e <- stringr::str_locate(target,"[)]")[,1]-1
-  target.short <- substr(target,s,e)
-  target.short <- gsub(" |-","_",target.short)
-  overlap <- merge(neu,read.delim(file.path(HbF,"work","hbf_GWAS_top_snps_long.txt"))[c("snpid","gene","acc","rs.ID")],by="gene")
-  overlap
+  neu <- subset(Olink_qPCR,Panel=="Neurology") %>%
+         mutate(target=Target,s=stringr::str_locate(target,"[(]")[,1]+1,e=stringr::str_locate(target,"[)]")[,1]-1,
+         target.short=substr(target,s,e),target.short=gsub(" |-","_",target.short)) %>%
+         select(UniProt,gene,target.short)
+  write.table(neu,file=file.path(HbF,"work","LBC1936.txt"),col.names=FALSE,row.names=FALSE,quote=FALSE)
 '
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${LBC1936}/LBC1936.hdr) \
+    <(
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       while read -r chr pos rsid snpid gene
+       do
+          export chr=${chr}
+          export pos=${pos}
+          export rsid=${rsid}
+          export snpid=${snpid}
+          export gene=${gene}
+          cat ${HbF}/work/LBC1936.txt | \
+          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
+             gunzip -c ${LBC1936}/{3}.gz | sed "s/\"//g" | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
+                 -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
+                 {split($1,a,":");if(\$8<=1e-5&&\$2==chr&&\$3>=pos-M&&\$3<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}"
+          '
+       done
+     ) > ${HbF}/work/LBC1938.tsv
 
 #GTEx, eQTL Catalog
 export GTEx=~/rds/public_databases/GTEx/csv
