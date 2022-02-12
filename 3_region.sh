@@ -65,7 +65,7 @@ END
 
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0}' ${AGES}/AGES.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | grep -v -w NA | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -88,7 +88,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0
 export deCODE=${pgwas}/deCODE
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -109,7 +109,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.h
 export Fenland=${pgwas}/Fenland
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene",$0}' ${Fenland}/all.grch37.tabix.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -134,7 +134,7 @@ Rscript -e '
 '
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Symbol","Prot",$0}' ${AGES}/AGES.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -167,7 +167,7 @@ Rscript -e '
 '
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${LBC1936}/LBC1936.hdr) \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
        do
           export chr=${chr}
@@ -184,6 +184,29 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           '
        done
      ) > ${HbF}/work/LBC1938.tsv
+
+
+#INTERVAL
+export INTERVAL=~/rds/results/public/proteomics/somalogic/sun_2018/raw_results/meta
+cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.gz | head -1 |
+      awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}') \
+    <(
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
+       while read -r chr pos rsid snpid gene
+       do
+          export chr=${chr}
+          export pos=${pos}
+          export rsid=${rsid}
+          export snpid=${snpid}
+          export gene=${gene}
+          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
+          ls ${INTERVAL} | xargs -l basename | sed 's/_meta_1.tbl.gz//' | \
+          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M '
+             tabix ${INTERVAL}/{}/{}_chrom_${chr}_meta_1.tbl.gz ${region} | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v OFS="\t" "10^\$8<=1e-5{print rsid,snpid,gene,id,\$0}"
+          '
+       done
+     ) > ${HbF}/work/INTERVAL.tsv
 
 #GTEx, eQTL Catalog
 export GTEx=~/rds/public_databases/GTEx/csv
@@ -224,14 +247,3 @@ Rscript -e '
   write.table(results,row.names=FALSE,quote=FALSE,sep="\t")
 '
 awk '$3<1e-5' ${HbF}/work/eQTL.tsv | grep -v gz
-
-#INTERVAL
-
-export INTERVAL=~/rds/results/public/proteomics/somalogic/sun_2018/raw_results/meta
-
-awk -vOFS="\t" 'NR>1{gsub(/chr|:[0-9]*|_[A-Z]*/,"",$1);print}' ${HbF}/work/hbf_GWAS_top_snps_long.txt | cut -f1,5 | tr '\t' ' ' | \
-parallel -C' ' --env INTERVAL 'ls ${INTERVAL}/{2}.*/{2}.*chrom_{1}* | grep -v -e tbi -e info' > ${HbF}/work/INTERVAL.lst
-
-cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.gz | head -1) \
-    <(
-     )
