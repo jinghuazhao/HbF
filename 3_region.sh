@@ -173,15 +173,15 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          cat ${HbF}/work/LBC1936.txt | \
-          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
-             gunzip -c ${LBC1936}/{3}.gz | sed "s/\"//g" | \
+          sed 's/GCP5/GPC5/;s/, /;/;s/,/;/' ${HbF}/work/LBC1936.txt | \
+          parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
+             gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
                  -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
                  {split(\$1,a,\":\");if(\$8<=1e-5&&\$2==chr&&\$3>=pos-M&&\$3<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}}"
           '
        done
-     ) > ${HbF}/work/LBC1938.tsv
+     ) > ${HbF}/work/LBC1936.tsv
 
 #6. INTERVAL
 export INTERVAL=~/rds/results/public/proteomics/somalogic/sun_2018/raw_results/meta
