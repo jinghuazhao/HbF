@@ -163,7 +163,7 @@ Rscript -e '
          select(UniProt,gene,target.short)
   write.table(neu,file=file.path(HbF,"work","LBC1936.txt"),col.names=FALSE,row.names=FALSE,quote=FALSE)
 '
-cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${LBC1936}/LBC1936.hdr) \
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${LBC1936}/LBC1936.hdr | sed 's/\"//g;s/,/\t/g') \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
@@ -177,8 +177,8 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
-                 -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
-                 {split(\$1,a,\":\");if(\$8<=1e-5&&\$2==chr&&\$3>=pos-M&&\$3<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}}"
+                 -v chr=${chr} -v pos=${pos} -v M=${M} -v FS="," -v OFS="\t" "
+                 {if(\$9<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}}"
           '
        done
      ) > ${HbF}/work/LBC1936.tsv
