@@ -9,7 +9,7 @@ function setup()
 
 function send()
 {
-  git add README.md ?_*
+  git add README.md ?_* .gitignore
   git commit -m "HbF"
   git branch -M main
   git push -u origin main
