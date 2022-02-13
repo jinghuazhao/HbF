@@ -173,7 +173,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          sed 's/GCP5/GPC5/;s/, /;/;s/,/;/' ${HbF}/work/LBC1936.txt | grep -v BDNF | \
+          sed 's/GCP5/GPC5/;s/, /;/;s/IL_12B,_IL_12A/IL12/' ${HbF}/work/LBC1936.txt | grep -v BDNF | \
           parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
