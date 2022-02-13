@@ -178,7 +178,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
                  -v chr=${chr} -v pos=${pos} -v M=${M} -v FS="," -v OFS="\t" "
-                 {if(\$9<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}}"
+                 {if(\$8<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M){print rsid,snpid,gene,uniprot,symbol,prot,\$0}}"
           '
        done
      ) > ${HbF}/work/LBC1936.tsv
