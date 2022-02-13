@@ -173,7 +173,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          sed 's/GCP5/GPC5/;s/, /;/;s/,/;/' ${HbF}/work/LBC1936.txt | \
+          sed 's/GCP5/GPC5/;s/, /;/;s/,/;/' ${HbF}/work/LBC1936.txt | grep -v BDNF | \
           parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
@@ -223,7 +223,7 @@ Rscript -e '
   all_indices <- 1:length(all_names)
   write.table(cbind(all_indices,all_names,all_files),file=file.path(HbF,"work","eQTL.txt"),row.names=FALSE,col.names=FALSE,quote=FALSE)
 '
-cat <(gunzip -c $GTEx/Whole_Blood.tsv.gz | head -1 | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}') \
+cat <(gunzip -c ${GTEx}/Adipose_Subcutaneous.tsv.gz | head -1 | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}') \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
@@ -234,12 +234,28 @@ cat <(gunzip -c $GTEx/Whole_Blood.tsv.gz | head -1 | awk -v OFS="\t" '{print "rs
           export snpid=${snpid}
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
-          cat ${HbF}/work/eQTL.txt | \
+          awk 'NR<50' ${HbF}/work/eQTL.txt | \
           parallel -C' ' -j15 --env rsid --env snpid --env gene --env region '
              tabix {3} ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "
-                 \$3<=1e-5{print rsid,snpid,gene,id,\$0}
-             "
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$3<=1e-5{print rsid,snpid,gene,id,\$0}"
+          '
+        done
+      ) > ${HbF}/work/GTEx.tsv
+cat <(gunzip -c ${eQTLCatalogue}/Alasoo_2018_ge_macrophage_IFNg.all.tsv.gz | head -1 | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}') \
+    <(
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v -w NA | sed 's/, /;/g' | \
+       while read -r chr pos rsid snpid gene
+       do
+          export chr=${chr}
+          export pos=${pos}
+          export rsid=${rsid}
+          export snpid=${snpid}
+          export gene=${gene}
+          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
+          awk 'NR>49' ${HbF}/work/eQTL.txt | \
+          parallel -C' ' -j15 --env rsid --env snpid --env gene --env region '
+             tabix {3} ${region} | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$3<=1e-5{print rsid,snpid,gene,id,\$0}"
           '
         done
       ) > ${HbF}/work/eQTL.tsv
@@ -247,8 +263,12 @@ Rscript -e '
   options(width=200)
   HbF <- Sys.getenv("HbF")
   suppressMessages(library(dplyr))
-  results <- read.delim(file.path(HbF,"work","eQTL.tsv")) %>%
-             filter(!is.na(pvalue)) %>%
-             select(variant,pvalue,molecular_trait_object_id,beta,se,chromosome,position,type,rsid)
+  GTEx <- read.delim(file.path(HbF,"work","GTEx.tsv")) %>%
+          filter(!is.na(pvalue)) %>%
+          select(variant,pvalue,molecular_trait_object_id,beta,se,chromosome,position,type,rsid)
+  eQTL <- read.delim(file.path(HbF,"work","eQTL.tsv")) %>%
+          filter(!is.na(pvalue)) %>%
+          select(variant,pvalue,molecular_trait_object_id,beta,se,chromosome,position,type,rsid)
+  results <- bind_rows(GTEx,eQTL)
   write.table(results,row.names=FALSE,quote=FALSE,sep="\t")
 '
