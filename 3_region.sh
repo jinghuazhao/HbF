@@ -163,7 +163,7 @@ Rscript -e '
          select(UniProt,gene,target.short)
   write.table(neu,file=file.path(HbF,"work","LBC1936.txt"),col.names=FALSE,row.names=FALSE,quote=FALSE)
 '
-cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${LBC1936}/LBC1936.hdr | sed 's/\"//g;s/,/\t/g') \
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot","Ln",$0}' ${LBC1936}/LBC1936.hdr | sed 's/\"//g;s/,/\t/g') \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
@@ -175,10 +175,11 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           export gene=${gene}
           sed 's/GCP5/GPC5/;s/N_Cdase/N_CDase/;s/, /;/;s/IL_12B,_IL_12A/IL12/' ${HbF}/work/LBC1936.txt | grep -v BDNF | \
           parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
-             gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g" | \
+             gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g;s/,/\t/g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
-                 -v chr=${chr} -v pos=${pos} -v M=${M} -v FS="," -v OFS="\t" "
-                 \$8<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}"
+                 -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
+                 \$9<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}" | \
+             grep -v -w -e CPM -e rs138154139
           '
        done
      ) > ${HbF}/work/LBC1936.tsv
@@ -255,7 +256,7 @@ cat <(gunzip -c ${eQTLCatalogue}/Alasoo_2018_ge_macrophage_IFNg.all.tsv.gz | hea
           awk 'NR>49' ${HbF}/work/eQTL.txt | \
           parallel -C' ' -j15 --env rsid --env snpid --env gene --env region '
              tabix {3} ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$3<=1e-5{print rsid,snpid,gene,id,\$0}"
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$9<=1e-5{print rsid,snpid,gene,id,\$0}"
           '
         done
       ) > ${HbF}/work/eQTL.tsv
