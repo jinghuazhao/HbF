@@ -15,9 +15,9 @@ grep '#' 2_lookup.sh | sed 's/#//'
 
 Results are in tsv format of named cohorts.
 
-
 ## cis pQTLs
 
 A lookup of cis pQTLs is made into `cis.log`.
 
-More study/region meta-data are explored.
+More study/region meta-data are explored. In particular, colocalisation analysis is done to account for regional associations.
+
