@@ -71,4 +71,20 @@ gunzip -c $deCODE/6992_67_HBD_HBD.txt.gz | awk '/chr11/ && $2 >= 5254196 && $2 <
 #https://www.ebi.ac.uk/gwas/studies/GCST003122
 cut -f22 ${HbF}/work/GCST003122.tsv | grep -f - ${HbF}/work/hbf_hits.txt
 #6:135097778 rs7776054
+grep rs ${HbF}/work/Sardinia3.txt | cut -d' ' -f1 | grep -f - -w ~/INF/work/INTERVAL.rsid
+#chr2:60710571_A_G rs13019832
+#chr2:60720951_A_G rs4671393
+#chr6:135356216_C_G rs11754265
+#chr6:135419018_C_T rs9399137
+#chr11:5231565_C_T rs12793110
+#chr11:5242698_C_G rs11036338
+#chr11:5250168_A_G rs7936823
+#chr11:5251849_G_T rs7944544
+#chr11:5255582_A_C rs35152987
+#chr11:5277236_C_T rs2855122
+#chr11:5290370_C_G rs67385638
+#chr16:149539_A_G rs570013781
+#chr16:216593_C_T rs141494605
+#chr16:342218_C_T rs148706947
+grep rs ${HbF}/work/Sardinia7.txt | sed 's/locus[1-9]//;s/(%)//;s/(g\/dl)//;s/(cond.)//;s/^[ ]*//g;s/^[1-9][ ]*//' | awk '{$1=$1};1'
 }
