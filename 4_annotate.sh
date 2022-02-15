@@ -4,6 +4,18 @@ export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
 export M=1e6
 
+function cis()
+(
+ for cis in $(awk '$1==11||$1==16 {print $4}' ${HbF}/work/hbf_hits.txt)
+  do
+    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
+    do
+       export f=${HbF}/work/${study}.tsv
+       cat <(echo ${cis} ${study}) <(head -1 ${f} | cut -f1-3 --complement) <(cut -f1-3 --complement ${f} | grep -w ${cis})
+    done
+  done
+) > ${HbF}/work/cis.log
+
 function annotate()
 {
 Rscript -e '
@@ -49,24 +61,14 @@ grep -e 4915.64 -e 17137.160 -e 6992.67 -e 7136.107 -e 19774.8 -e 18198.51 -e 79
 #18198_51_HBQ1_HBAT
 #6919_3_HBZ_HBAZ
 #6992_67_HBD_HBD
+
+export deCODE=${pgwas}/deCODE
 gunzip -c $deCODE/17137_160_HBB_Beta_globin.txt.gz | awk '/chr11/ && $2 >= 5246696 && $2 <= 5248301'
 gunzip -c $deCODE/18198_51_HBQ1_HBAT.txt.gz | awk '/chr16/ && $2 >= 230485 && $2 <= 231104'
 gunzip -c $deCODE/6919_3_HBZ_HBAZ.txt.gz | awk '/chr16/ && $2 >= 202908 && $2 <= 204396'
 gunzip -c $deCODE/6992_67_HBD_HBD.txt.gz | awk '/chr11/ && $2 >= 5254196 && $2 <= 5255663'
-(
- for cis in $(awk '$1==11||$1==16 {print $4}' ${HbF}/work/hbf_hits.txt)
-  do
-    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
-    do
-       export f=${HbF}/work/${study}.tsv
-       cat <(echo ${cis} ${study}) <(head -1 ${f} | cut -f1-3 --complement) <(cut -f1-3 --complement ${f} | grep -w ${cis})
-    done
-  done
-) > ${HbF}/work/cis.out
 
 #https://www.ebi.ac.uk/gwas/studies/GCST003122
-cut -f22 work/GCST003122.tsv | grep -f - ${HbF}/work/hbf_hits.txt
+cut -f22 ${HbF}/work/GCST003122.tsv | grep -f - ${HbF}/work/hbf_hits.txt
 #6:135097778 rs7776054
 }
-
-export deCODE=${pgwas}/deCODE
