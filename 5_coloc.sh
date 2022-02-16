@@ -15,9 +15,8 @@ function coloc()
 {
   if [ ! -d ${HbF}/$1 ]; then mkdir ${HbF}/$1; fi
   read chr pos pos38 rsid < \
-                       <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1-4 | awk 'NR==ENVIRON["SLURM_ARRAY_TASK_ID"]')
-  if [ ! -f ${HbF}/$1/${prot}-${rsid}.pdf ] || \
-     [ ! -f ${HbF}/$1/${prot}-${rsid}.rds ]; then
+                          <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1-4 | awk 'NR==ENVIRON["SLURM_ARRAY_TASK_ID"]')
+  if [ ! -f ${HbF}/$1/${prot}-${rsid}.pdf ] || [ ! -f ${HbF}/$1/${prot}-${rsid}.rds ]; then
     cd ${HbF}/$1
     Rscript -e '
         liftRegion <- function(x,chain,flanking=1e6)
@@ -96,29 +95,15 @@ function coloc()
           purrr::map_df(result_filtered, ~run_coloc(., gwas_stats_hg38), .id = "unique_id")
         }
 
-        gtex_coloc <- function(prot,chr,ensGene,chain,region37,region38,out,run_all=FALSE)
+        gtex_coloc <- function(prot,chr,ensGene,chain,region37,region38,out)
         {
           gwas_stats_hg38 <- sumstats(prot,chr,region37)
-          if (run_all)
+          df_gtex <- gtex(gwas_stats_hg38,ensGene,region38)
+          if (exists("df_gtex"))
           {
-            df_microarray <- microarray(gwas_stats_hg38,ensGene,region38)
-            df_rnaseq <- rnaseq(gwas_stats_hg38,ensGene,region38)
-            df_gtex <- gtex(gwas_stats_hg38,ensGene,region38)
-            if (exists("df_microarray") & exits("df_rnaseq") & exists("df_gtex"))
-            {
-              coloc_df = dplyr::bind_rows(df_microarray, df_rnaseq, df_gtex)
-              saveRDS(coloc_df, file=paste0(out,".rds"))
-              dplyr::arrange(coloc_df, -PP.H4.abf)
-              p <- ggplot(coloc_df, aes(x = PP.H4.abf)) + geom_histogram()
-            }
-          } else {
-            df_gtex <- gtex(gwas_stats_hg38,ensGene,region38)
-            if (exists("df_gtex"))
-            {
-              saveRDS(df_gtex,file=paste0(out,".RDS"))
-        #     dplyr::arrange(df_gtex, -PP.H4.abf)
-        #     p <- ggplot(df_gtex, aes(x = PP.H4.abf)) + geom_histogram()
-            }
+            saveRDS(df_gtex,file=paste0(out,".RDS"))
+          # dplyr::arrange(df_gtex, -PP.H4.abf)
+          # p <- ggplot(df_gtex, aes(x = PP.H4.abf)) + geom_histogram()
           }
           s <- ggplot(gwas_stats_hg38, aes(x = position, y = LP)) + geom_point()
           ggsave(plot = s, filename = paste0(out, "-assoc.pdf"), path = "", device = "pdf",
@@ -127,29 +112,15 @@ function coloc()
         #        height = 15, width = 15, units = "cm", dpi = 300)
         }
 
-        ge_coloc <- function(prot,chr,ensGene,chain,region37,region38,out,run_all=FALSE)
+        ge_coloc <- function(prot,chr,ensGene,chain,region37,region38,out)
         {
           gwas_stats_hg38 <- sumstats(prot,chr,region37)
-          if (run_all)
+          df_ge <- ge(gwas_stats_hg38,ensGene,region38)
+          if (exists("df_ge"))
           {
-            df_microarray <- microarray(gwas_stats_hg38,ensGene,region38)
-            df_rnaseq <- rnaseq(gwas_stats_hg38,ensGene,region38)
-            df_ge <- ge(gwas_stats_hg38,ensGene,region38)
-            if (exists("df_microarray") & exits("df_rnaseq") & exists("df_gtex"))
-            {
-              coloc_df = dplyr::bind_rows(df_microarray, df_rnaseq, df_gtex)
-              saveRDS(coloc_df, file=paste0(out,".rds"))
-              dplyr::arrange(coloc_df, -PP.H4.abf)
-              p <- ggplot(coloc_df, aes(x = PP.H4.abf)) + geom_histogram()
-            }
-          } else {
-            df_ge <- ge(gwas_stats_hg38,ensGene,region38)
-            if (exists("df_ge"))
-            {
-              saveRDS(df_ge,file=paste0(out,".rds"))
-        #     dplyr::arrange(df_ge, -PP.H4.abf)
-        #     p <- ggplot(df_ge, aes(x = PP.H4.abf)) + geom_histogram()
-            }
+             saveRDS(df_ge,file=paste0(out,".rds"))
+          #  dplyr::arrange(df_ge, -PP.H4.abf)
+          #  p <- ggplot(df_ge, aes(x = PP.H4.abf)) + geom_histogram()
           }
           s <- ggplot(gwas_stats_hg38, aes(x = position, y = LP)) + geom_point()
           ggsave(plot = s, filename = paste0(out, "-assoc.pdf"), path = "", device = "pdf",
@@ -243,7 +214,7 @@ function coloc()
         gwasvcf::set_bcftools(file.path(HPC_WORK,"bin","bcftools"))
         f <- file.path(path.package("pQTLtools"),"eQTL-Catalogue","tabix_ftp_paths.tsv")
         tabix_paths <- read.delim(f, stringsAsFactors = FALSE) %>% dplyr::as_tibble()
-        sentinels <- subset(read.csv(file.path(HbF,"work","HbF1.merge.cis.vs.trans")),cis)
+        sentinels <- ead.csv(file.path(HbF,"work","hbf_hits.txt"))
         cvt_rsid <- file.path(HbF,"work","HbF1.merge.cis.vs.trans-rsid")
         prot_rsid <- subset(read.delim(cvt_rsid,sep=" "),cis,select=c(prot,SNP))
 
