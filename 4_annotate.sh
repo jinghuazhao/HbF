@@ -14,7 +14,7 @@ function cis()
        cat <(echo ${cis} ${study}) <(head -1 ${f} | cut -f1-3 --complement) <(cut -f1-3 --complement ${f} | grep -w ${cis})
     done
   done
-) > ${HbF}/work/cis.log
+) > ${HbF}/work/cis.tsv
 
 
 function all()
@@ -26,39 +26,39 @@ function all()
        export f=${HbF}/work/${study}.tsv
        case ${study} in
        AGES)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        ARIC)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        deCODE)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        Fenland)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$14}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$14}' ${f} | \
          sort -k2,2 | uniq
          ;;
        scallop-cvd1)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        INTERVAL)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        LBC1936)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        GTEx)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        eQTL)
-         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        *)
@@ -66,7 +66,7 @@ function all()
        esac
     done
   done
-) > ${HbF}/work/all.log
+) > ${HbF}/work/all.tsv
 
 all
 
