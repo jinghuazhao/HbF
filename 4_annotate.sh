@@ -26,39 +26,39 @@ function all()
        export f=${HbF}/work/${study}.tsv
        case ${study} in
        AGES)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        ARIC)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        deCODE)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        Fenland)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$14}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$14}' ${f} | \
          sort -k2,2 | uniq
          ;;
        scallop-cvd1)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        INTERVAL)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        LBC1936)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        GTEx)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        eQTL)
-         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} '$1 ~ rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        *)
