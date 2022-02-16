@@ -201,9 +201,8 @@ if [ ! -f ${HbF}/$1/${prot}-${rsid}.pdf ] || [ ! -f ${HbF}/$1/${prot}-${rsid}.rd
       gwasvcf::set_bcftools(file.path(HPC_WORK,"bin","bcftools"))
       f <- file.path(path.package("pQTLtools"),"eQTL-Catalogue","tabix_ftp_paths.tsv")
       tabix_paths <- read.delim(f, stringsAsFactors = FALSE) %>% dplyr::as_tibble()
-      sentinels <- ead.csv(file.path(HbF,"work","hbf_hits.txt"))
-      hbf_hits <- file.path(HbF,"work","hbf_hits.txt")
-      prot_rsid <- read.delim(hbf_hits,sep=" ")
+      sentinels <- read.delim(file.path(HbF,"work","hbf_hits.txt")) %>%
+                   rename(chr=CHR,pos=BP,rsid=rs.ID)
       r <- as.integer(Sys.getenv("r"))
       single_run(r)
       single_run(r,batch="eQTLCatalogue")

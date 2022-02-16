@@ -1,3 +1,4 @@
+#!/rds/user/jhz22/hpc-work/bin/Rscript --vanilla
 options(width=2000)
 
 suppressMessages(require(pQTLtools))
