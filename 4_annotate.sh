@@ -16,6 +16,60 @@ function cis()
   done
 ) > ${HbF}/work/cis.log
 
+
+function all()
+(
+ for rsid in $(awk 'NR>1{print $4}' ${HbF}/work/hbf_hits.txt)
+  do
+    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
+    do
+       export f=${HbF}/work/${study}.tsv
+       case ${study} in
+       AGES)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$6}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       ARIC)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$6}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       deCODE)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       Fenland)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$14}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       scallop-cvd1)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$5}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       INTERVAL)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       LBC1936)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$5}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       GTEx)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       eQTL)
+         awk -v rsid=${rsid} '$1 ~ rsid {print $1,$4}' ${f} | \
+         sort -k2,2 | uniq
+         ;;
+       *)
+         ;;
+       esac
+    done
+  done
+) > ${HbF}/work/all.log
+
+all
+
 function annotate()
 {
 Rscript -e '

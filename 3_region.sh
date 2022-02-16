@@ -130,7 +130,7 @@ Rscript -e '
   st1 <- openxlsx::read.xlsx(stables, sheet=1, colNames=TRUE, skipEmptyRows=TRUE, cols=c(1:23), rows=c(3:95))
   write.table(st1[c("UniProt.ID","Gene","Short_annotation")],file=file.path(HbF,"work","scallop-cvd1.txt"),col.names=FALSE,quote=FALSE,row.names=FALSE)
 '
-cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Symbol","Prot",$0}' ${scallop_cvd1}/cvd1.hdr) \
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0}' ${scallop_cvd1}/cvd1.hdr) \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
