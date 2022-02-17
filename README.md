@@ -8,8 +8,8 @@ File | Description
 -----|-------------------------
 0_github.sh | GitHub batch file
 1_make_variant_list.R | Data preparation
-2_lookup.sh | Direct lookup
-3_region.sh | Regional overlap
+2_lookup.sh | Direct pQTL/Gene lookup
+3_region.sh | Regional lookup
 4_annotate.sh | Meta-data
 5_coloc.sh* | Colocalisation analysis
 
