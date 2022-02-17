@@ -20,7 +20,9 @@ Upon completion we have
 grep '#' 2_lookup.sh | sed 's/#//'
 ```
 
-## +/- 1Mb windows
+## Flanking windows
+
+This is set by `M`.
 
 Results are in tsv format of named cohorts. When M=0, we have another version of direct lookup.
 
