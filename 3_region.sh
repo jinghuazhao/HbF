@@ -2,7 +2,7 @@
 
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
-export M=1e6
+export M=0
 
 #1. AGES
 export AGES=${pgwas}/AGES
