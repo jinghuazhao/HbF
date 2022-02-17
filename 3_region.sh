@@ -3,6 +3,7 @@
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
 export M=0
+export p_gwas=1
 
 #1. AGES
 export AGES=${pgwas}/AGES
@@ -49,10 +50,10 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           awk '{print $1,$2,$7}' ${HbF}/work/AGES.txt | \
-          parallel -C' ' -j15 --env AGES --env region '
+          parallel -C' ' -j15 --env AGES --env region --env p_gwas '
              tabix ${AGES}/{2}/{2}_buildGRCh37.tsv.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v gcst={2} -v symbol={3} -v OFS="\t" "
-                 \$2<=1e-5{print rsid,snpid,gene,somamer,gcst,symbol,\$0}
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v gcst={2} -v symbol={3} -v p=${p_gwas} -v OFS="\t" "
+                 \$2<=p{print rsid,snpid,gene,somamer,gcst,symbol,\$0}
              "
           '
        done
@@ -73,10 +74,10 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           sed '1d' ${ARIC}/seqid.txt | cut -f1-3 | tr '\t' ' ' | \
-          parallel -C' ' -j15 --env ARIC --env rsid --env snpid --env gene --env region '
+          parallel -C' ' -j15 --env ARIC --env rsid --env snpid --env gene --env region --env p_gwas '
              tabix ${ARIC}/EA/{1}.PHENO1.glm.linear.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v uniprot={2} -v symbol={3} -v OFS="\t" "
-                 \$13<=1e-5{print rsid,snpid,gene,somamer,uniprot,symbol,\$0}
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v uniprot={2} -v symbol={3} -v p=${p_gwas} -v OFS="\t" "
+                 \$13<=p{print rsid,snpid,gene,somamer,uniprot,symbol,\$0}
              "
           '
         done
@@ -95,10 +96,10 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.h
           export snpid=${snpid}
           export gene=${gene}
           ls ${deCODE}/*gz | xargs -l basename | sed 's/.txt.gz//' | \
-          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
+          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M --env p_gwas '
              gunzip -c ${deCODE}/{}.txt.gz | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v chr=chr${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
-                 \$8<=1e-5&&\$1==chr&&\$2>=pos-M&&\$2<pos+M{print rsid,snpid,gene,id,\$0}"
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v chr=chr${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
+                 \$8<=p&&\$1==chr&&\$2>=pos-M&&\$2<pos+M{print rsid,snpid,gene,id,\$0}"
           '
        done
      ) > ${HbF}/work/deCODE.tsv
@@ -117,7 +118,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene",$0}' ${Fenland}/all.grch37.t
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           tabix ${Fenland}/all.grch37.tabix.gz ${region} | \
-          awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v OFS="\t" "\$14<=1e-5{print rsid,snpid,gene,\$0}"
+          awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v p=${p_gwas} -v OFS="\t" "\$14<=p{print rsid,snpid,gene,\$0}"
        done
      ) > ${HbF}/work/Fenland.tsv
 
@@ -141,11 +142,11 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
           export snpid=${snpid}
           export gene=${gene}
           grep -v -w -e BNP -e IL4 ${HbF}/work/scallop-cvd1.txt | \
-          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M '
+          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M --env p_gwas '
              gunzip -c ${scallop_cvd1}/{3}.txt.gz | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v symbol={2} -v prot={3} \
-                 -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
-                 {split(\$1,a,\":\");if(\$8<=1e-5&&a[1]==chr&&a[2]>=pos-M&&a[2]<pos+M){print rsid,snpid,gene,somamer,symbol,prot,\$0}}"
+                 -v chr=${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
+                 {split(\$1,a,\":\");if(\$8<=p&&a[1]==chr&&a[2]>=pos-M&&a[2]<pos+M){print rsid,snpid,gene,somamer,symbol,prot,\$0}}"
           '
        done
      ) > ${HbF}/work/scallop-cvd1.tsv
@@ -174,11 +175,11 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot","L
           export snpid=${snpid}
           export gene=${gene}
           sed 's/GCP5/GPC5/;s/N_Cdase/N_CDase/;s/, /;/;s/IL_12B,_IL_12A/IL12/' ${HbF}/work/LBC1936.txt | grep -v BDNF | \
-          parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M '
+          parallel -C' ' -j15 --env LBC1936 --env chr --env pos --env M --env p_gwas '
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g;s/,/\t/g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
-                 -v chr=${chr} -v pos=${pos} -v M=${M} -v OFS="\t" "
-                 \$9<=1e-5&&\$3==chr&&\$4>=pos-M&&\$4<pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}" | \
+                 -v chr=${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
+                 \$9<=p&&\$3==chr&&\$4>=pos-M&&\$4<pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}" | \
              grep -v -w -e CPM -e rs138154139
           '
        done
@@ -199,9 +200,9 @@ cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.g
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           ls ${INTERVAL} | xargs -l basename | sed 's/_meta_1.tbl.gz//' | \
-          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M '
+          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M --env p_gwas '
              tabix ${INTERVAL}/{}/{}_chrom_${chr}_meta_1.tbl.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v OFS="\t" "10^\$8<=1e-5{print rsid,snpid,gene,id,\$0}"
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "10^\$8<=p{print rsid,snpid,gene,id,\$0}"
           '
        done
      ) > ${HbF}/work/INTERVAL.tsv
@@ -236,9 +237,9 @@ cat <(gunzip -c ${GTEx}/Adipose_Subcutaneous.tsv.gz | head -1 | awk -v OFS="\t" 
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           awk 'NR<50' ${HbF}/work/eQTL.txt | \
-          parallel -C' ' -j15 --env rsid --env snpid --env gene --env region '
+          parallel -C' ' -j15 --env rsid --env snpid --env gene --env region --env p_gwas '
              tabix {3} ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$3<=1e-5{print rsid,snpid,gene,id,\$0}"
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v p=${p_gwas} -v OFS="\t" "\$3<=p{print rsid,snpid,gene,id,\$0}"
           '
         done
       ) > ${HbF}/work/GTEx.tsv
@@ -254,9 +255,9 @@ cat <(gunzip -c ${eQTLCatalogue}/Alasoo_2018_ge_macrophage_IFNg.all.tsv.gz | hea
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
           awk 'NR>49' ${HbF}/work/eQTL.txt | \
-          parallel -C' ' -j15 --env rsid --env snpid --env gene --env region '
+          parallel -C' ' -j15 --env rsid --env snpid --env gene --env region --env p_gwas '
              tabix {3} ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v OFS="\t" "\$9<=1e-5{print rsid,snpid,gene,id,\$0}"
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={2} -v p=${p_gwas} -v OFS="\t" "\$9<=p{print rsid,snpid,gene,id,\$0}"
           '
         done
       ) > ${HbF}/work/eQTL.tsv
