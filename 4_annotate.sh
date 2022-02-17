@@ -6,7 +6,7 @@ export M=1e6
 
 function cis()
 (
- for cis in $(awk '$1==11||$1==16 {print $4}' ${HbF}/work/hbf_hits.txt)
+  for cis in $(awk '$1==11||$1==16 {print $4}' ${HbF}/work/hbf_hits.txt)
   do
     for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
     do
@@ -26,39 +26,39 @@ function all()
        export f=${HbF}/work/${study}.tsv
        case ${study} in
        AGES)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $7 == rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        ARIC)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$6}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $9 == rsid {print $1,study,$6}' ${f} | \
          sort -k2,2 | uniq
          ;;
        deCODE)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $8 == rsid {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        Fenland)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$14}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $6 == rsid {print $1,study,$14}' ${f} | \
          sort -k2,2 | uniq
          ;;
        scallop-cvd1)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr/,"",$2);if($2==$7) print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        INTERVAL)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr|_[A-Z]*_[A-Z]*/,"",$2);if($2==$5":"$6)print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        LBC1936)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$5}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $8 {print $1,study,$5}' ${f} | \
          sort -k2,2 | uniq
          ;;
        GTEx)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        eQTL)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 ~ rsid {print $1,study,$4}' ${f} | \
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4}' ${f} | \
          sort -k2,2 | uniq
          ;;
        *)
