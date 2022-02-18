@@ -11,10 +11,9 @@ File | Description
 2_lookup.sh | Direct pQTL/Gene lookup
 3_region.sh | Regional lookup
 4_annotate.sh | Meta-data
-5_coloc.sh+ | Colocalisation analysis
+5_coloc.sh[^longnote] | Colocalisation analysis
 
-
-+ It is to be done formally for regional associations.
+[^longnote] It is to be done formally for regional associations.
 
 ## Lookup
 
