@@ -3,12 +3,13 @@
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
 export M=1e6
+export eQTLGen=~/rds/public_databases/eQTLGen/tabix
 
 function cis()
 (
   for cis in $(awk '$1==11||$1==16 {print $4}' ${HbF}/work/hbf_hits.txt)
   do
-    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
+    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL eQTLGen-cis_full eQTLGen-trans
     do
        export f=${HbF}/work/${study}.tsv
        cat <(echo ${cis} ${study}) <(head -1 ${f} | cut -f1-3 --complement) <(cut -f1-3 --complement ${f} | grep -w ${cis})
@@ -19,47 +20,65 @@ function cis()
 
 function all()
 (
- for rsid in $(awk 'NR>1{print $4}' ${HbF}/work/hbf_hits.txt)
+  echo rsid study id gene chr pos ref alt eaf beta se p | tr ' ' '\t'
+  for rsid in $(awk 'NR>1{print $4}' ${HbF}/work/hbf_hits.txt)
   do
-    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL
+    for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL eQTLGen-cis_full eQTLGen-trans
     do
        export f=${HbF}/work/${study}.tsv
        case ${study} in
        AGES)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $7 == rsid {print $1,study,$6}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $7 == rsid {print $1,study,$4,$6,$9,$10,$11,$12,$13,$14,$15,$8}' ${f}
          ;;
        ARIC)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $9 == rsid {print $1,study,$6}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $9 == rsid {print $1,study,$4,$6,$7,$8,$11,$10,$13,$16,$17,$19}' ${f}
          ;;
        deCODE)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $8 == rsid {print $1,study,$4}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $8 == rsid {print $1,study,$4,"NA",$5,$6,$9,$10,"NA",$11,$14,$12}' ${f}
          ;;
        Fenland)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $6 == rsid {print $1,study,$14}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $6 == rsid {print $1,study,$14,"NA",$4,$5,$8,$9,$10,$15,$16,$17}' ${f} | \
+         sort -k3,3 | join -13 -21 - \
+         <(Rscript -e 'suppressMessages(library(dplyr));
+                       a <- mutate(pQTLtools::SomaScanV4.1,SeqID=gsub("-","_",SeqID))
+                       write.table(select(a,SeqID,GeneID),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
+         awk -v OFS='\t' '{print $2,$3,$1,$13,toupper($5),toupper($6),$7,$8,$9,$10,$11,$12}'
          ;;
        scallop-cvd1)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr/,"",$2);if($2==$7) print $1,study,$5}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr/,"",$2);if($2==$7) print $1,study,$5}' ${f}
          ;;
        INTERVAL)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr|_[A-Z]*_[A-Z]*/,"",$2);if($2==$5":"$6)print $1,study,$4}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {
+             gsub(/chr|_[A-Z]*_[A-Z]*/,"",$2);gene=substr($4,1,index($4,".")-1);
+             if($2==$5":"$6)print $1,study,$4,gene,$5,$6,toupper($8),toupper($9),"NA",$10,$11,10^$12
+         }' ${f}
          ;;
        LBC1936)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $8 {print $1,study,$5}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $8 {print $1,study,$5}' ${f}
          ;;
        GTEx)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$11,$17,$18,$20,$19,$10,$13,$14,$7}' ${f} | \
+         sort -k3,3 | join -13 -21 - \
+         <(Rscript -e 'suppressMessages(library(dplyr));
+                       write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
+         awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
          ;;
        eQTL)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4}' ${f} | \
-         sort -k2,2 | uniq
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$21,$6,$7,$9,$8,$12,$14,$15,$13}' ${f} | \
+         sort -k3,3 | join -13 -21 - \
+         <(Rscript -e 'suppressMessages(library(dplyr));
+                       write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
+         awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
+         ;;
+       eQTLGen-cis_full)
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $6 {print $1,study,$12,$13,$7,$8,$10,$11,"NA",$9,$17,$5}' ${f} | \
+         sort -k1,1 | join - <(gunzip -c $eQTLGen/AF_AC_MAF_pos.txt.gz | cut -f1,9 | sort -k1,1) | \
+         awk -v OFS='\t' '{print $1,$2,$3,$4,$5,$6,$7,$8,$13,$10,$11,$12}'
+         ;;
+       eQTLGen-trans)
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $6 {print $1,study,$12,$13,$7,$8,$9,$10,"NA",$11,$17,$5}' ${f}  | \
+         sort -k1,1 | join - <(gunzip -c $eQTLGen/AF_AC_MAF_pos.txt.gz | cut -f1,9 | sort -k1,1) | \
+         awk -v OFS='\t' '{print $1,$2,$3,$4,$5,$6,$7,$8,$13,$10,$11,$12}'
          ;;
        *)
          ;;
@@ -69,6 +88,18 @@ function all()
 ) > ${HbF}/work/all.tsv
 
 all
+
+Rscript -e '
+  options(width=200)
+  suppressMessages(library(pQTLtools))
+  suppressMessages(library(dplyr))
+  HbF <- Sys.getenv("HbF")
+  all <- read.delim(file.path(HbF,"work","all.tsv"))
+  bse <- with(all,as.data.frame(gap::get_b_se(eaf,se,beta)))
+  eQTLGen <- with(all,substr(study,1,7)=="eQTLGen")
+  all[eQTLGen,"beta"] <- bse[eQTLGen,"b"]
+  all[eQTLGen,"se"] <- bse[eQTLGen,"se"]
+'
 
 function annotate()
 {
@@ -168,4 +199,8 @@ grep rs ${HbF}/work/Sardinia3.txt | cut -d' ' -f1 | grep -f - -w ~/INF/work/INTE
 #rs2855122 2.57e-11 -0.1458 (0.022) chr11:5277236_C_T
 
 grep rs ${HbF}/work/Sardinia7.txt | sed 's/locus[1-9]//;s/(%)//;s/(g\/dl)//;s/(cond.)//;s/^[ ]*//g;s/^[1-9][ ]*//' | awk '{$1=$1};1'
+for study in AGES ARIC deCODE Fenland scallop-cvd1 INTERVAL LBC1936 GTEx eQTL eQTLGen-cis_full eQTLGen-trans
+do
+   head -1 ${HbF}/work/{study}.tsv | tr '\t' '\n' | awk '{print NR,$1}'
+done
 }

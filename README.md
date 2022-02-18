@@ -10,7 +10,7 @@ File | Description
 1_make_variant_list.R | Data preparation
 2_lookup.sh | Direct pQTL/Gene lookup
 3_region.sh | Regional lookup
-4_annotate.sh | Meta-data
+4_aggregate.sh | Meta-data
 5_coloc.sh<sup>1</sup> | Colocalisation analysis
 
 <sup>1</sup> It is to be done formally for regional associations.

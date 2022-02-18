@@ -279,9 +279,27 @@ cat <(gunzip -c ${eQTLGen}/cis_full.txt.gz | head -1 |
           parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M --env p_gwas '
              tabix ${eQTLGen}/{}.txt.gz ${region} | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$1<=p{print rsid,snpid,gene,id,\$0}"
-          ' ::: cis_full trans
+          ' ::: cis_full
        done
-     ) > ${HbF}/work/eQTLGen.tsv
+     ) > ${HbF}/work/eQTLGen-cis_full.tsv
+cat <(gunzip -c ${eQTLGen}/trans.txt.gz | head -1 |
+      awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}') \
+    <(
+       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
+       while read -r chr pos rsid snpid gene
+       do
+          export chr=${chr}
+          export pos=${pos}
+          export rsid=${rsid}
+          export snpid=${snpid}
+          export gene=${gene}
+          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
+          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M --env p_gwas '
+             tabix ${eQTLGen}/{}.txt.gz ${region} | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$1<=p{print rsid,snpid,gene,id,\$0}"
+          ' ::: trans
+       done
+     ) > ${HbF}/work/eQTLGen-trans.tsv
 
 Rscript -e '
   options(width=200)
