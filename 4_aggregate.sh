@@ -61,14 +61,14 @@ function all()
          sort -k4,4 | join -14 -21 - \
          <(Rscript -e 'suppressMessages(library(dplyr));
                        write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
-         awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
+         awk -v OFS='\t' '{print $2,$3,$4,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
          ;;
        eQTL)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$21,$6,$7,$9,$8,$12,$14,$15,$13}' ${f} | \
          sort -k4,4 | join -14 -21 - \
          <(Rscript -e 'suppressMessages(library(dplyr));
                        write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
-         awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
+         awk -v OFS='\t' '{print $2,$3,$4,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
          ;;
        eQTLGen-cis_full)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $6 {print $1,study,$12,$13,$7,$8,$10,$11,"NA",$9,$17,$5}' ${f} | \
