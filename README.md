@@ -25,6 +25,6 @@ upon completion.
 
 ## Flanking windows
 
-This is set by `M`. When M=0, we have another a direct pQTL lookup.
+This is set by `M`, and results for M=1 are contained in the regions/ directory. When M=0, we have another a direct pQTL lookup.
 
 Results are in tsv format of named cohorts.
