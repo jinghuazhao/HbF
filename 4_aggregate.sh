@@ -58,14 +58,14 @@ function all()
          ;;
        GTEx)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$11,$17,$18,$20,$19,$10,$13,$14,$7}' ${f} | \
-         sort -k3,3 | join -13 -21 - \
+         sort -k4,4 | join -14 -21 - \
          <(Rscript -e 'suppressMessages(library(dplyr));
                        write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
          awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
          ;;
        eQTL)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$21,$6,$7,$9,$8,$12,$14,$15,$13}' ${f} | \
-         sort -k3,3 | join -13 -21 - \
+         sort -k4,4 | join -14 -21 - \
          <(Rscript -e 'suppressMessages(library(dplyr));
                        write.table(select(pQTLtools::hg19Tables,ensGene,hgncSym),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
          awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,$7,$8,$9,$10,$11,$12}'
@@ -99,6 +99,13 @@ Rscript -e '
   eQTLGen <- with(all,substr(study,1,7)=="eQTLGen")
   all[eQTLGen,"beta"] <- bse[eQTLGen,"b"]
   all[eQTLGen,"se"] <- bse[eQTLGen,"se"]
+  sig <- subset(all,p<=1e-5)
+  write.table(sig,file.path(HbF,"work","sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE)
+  sig <- mutate(sig,rsid_gene=paste0(rsid,"-",gene))
+  all_sig <- mutate(all,rsid_gene=paste0(rsid,"-",gene)) %>%
+             filter(rsid_gene %in% sig$rsid_gene) %>%
+             select(-rsid_gene)
+  write.table(all_sig,file.path(HbF,"work","all-sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE)
 '
 
 function annotate()
