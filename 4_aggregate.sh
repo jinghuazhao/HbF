@@ -42,7 +42,7 @@ function all()
          <(Rscript -e 'suppressMessages(library(dplyr));
                        a <- mutate(pQTLtools::SomaScanV4.1,SeqID=gsub("-","_",SeqID))
                        write.table(select(a,SeqID,GeneID),row.names=FALSE,col.names=FALSE,quote=FALSE)' | sort -k1,1) | \
-         awk -v OFS='\t' '{print $2,$3,$1,$13,toupper($5),toupper($6),$7,$8,$9,$10,$11,$12}'
+         awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,toupper($7),toupper($8),$9,$10,$11,$12}'
          ;;
        scallop-cvd1)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr/,"",$2);if($2==$7) print $1,study,$5}' ${f}
