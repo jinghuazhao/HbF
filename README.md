@@ -11,7 +11,7 @@ File | Description             | Comment
 2_lookup.sh | Direct pQTL/Gene lookup |
 3_region.sh | Regional lookup |
 4_aggregate.sh | Meta-data |
-5_coloc.sh | Colocalisation analysis | to be done
+5_coloc.sh | Colocalisation analysis | to be revised
 
 ## Lookup
 
