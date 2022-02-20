@@ -99,7 +99,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.h
           parallel -C' ' -j15 --env deCODE --env chr --env pos --env M --env p_gwas '
              gunzip -c ${deCODE}/{}.txt.gz | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v chr=chr${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
-                 \$8<=p&&\$1==chr&&\$2>=pos-M&&\$2<pos+M{print rsid,snpid,gene,id,\$0}"
+                 \$8<=p&&\$1==chr&&\$2>=pos-M&&\$2<=pos+M{print rsid,snpid,gene,id,\$0}"
           '
        done
      ) > ${HbF}/work/deCODE.tsv
@@ -146,7 +146,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot",$0
              gunzip -c ${scallop_cvd1}/{3}.txt.gz | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v somamer={1} -v symbol={2} -v prot={3} \
                  -v chr=${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
-                 {split(\$1,a,\":\");if(\$8<=p&&a[1]==chr&&a[2]>=pos-M&&a[2]<pos+M){print rsid,snpid,gene,somamer,symbol,prot,\$0}}"
+                 {split(\$1,a,\":\");if(\$8<=p&&a[1]==chr&&a[2]>=pos-M&&a[2]<=pos+M){print rsid,snpid,gene,somamer,symbol,prot,\$0}}"
           '
        done
      ) > ${HbF}/work/scallop-cvd1.tsv
@@ -179,7 +179,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","UniProt","Symbol","Prot","L
              gunzip -c ${LBC1936}/{3}.txt.gz | sed "s/\"//g;s/,/\t/g" | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v uniprot={1} -v symbol={2} -v prot={3} \
                  -v chr=${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
-                 \$9<=p&&\$3==chr&&\$4>=pos-M&&\$4<pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}" | \
+                 \$9<=p&&\$3==chr&&\$4>=pos-M&&\$4<=pos+M{print rsid,snpid,gene,uniprot,symbol,prot,\$0}" | \
              grep -v -w -e CPM -e rs138154139
           '
        done
