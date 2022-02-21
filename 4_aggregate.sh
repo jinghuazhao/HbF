@@ -45,7 +45,8 @@ function all()
          awk -v OFS='\t' '{print $2,$3,$1,$13,$5,$6,toupper($7),toupper($8),$9,$10,$11,$12}'
          ;;
        scallop-cvd1)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {gsub(/chr/,"",$2);if($2==$7) print $1,study,$5}' ${f}
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {
+            gsub(/chr/,"",$2);split($7,a,":");if($2==$7) print $1,study,$6,$5,a[1],a[2],toupper($8),toupper($9),$10,$12,$13,$14}' ${f}
          ;;
        INTERVAL)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid {
@@ -54,7 +55,7 @@ function all()
          }' ${f}
          ;;
        LBC1936)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $8 {print $1,study,$5}' ${f}
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $8 {print $1,study,$6,$5,$9,$10,$11,$12,"NA",$13,$14,$15}' ${f}
          ;;
        GTEx)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && rsid == $NF {print $1,study,$4,$11,$17,$18,$20,$19,$10,$13,$14,$7}' ${f} | \
