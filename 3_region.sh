@@ -87,8 +87,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
 export deCODE=${pgwas}/deCODE
 cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
     <(
-       sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
-       while read -r chr pos rsid snpid gene
+       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g')
        do
           export chr=${chr}
           export pos=${pos}
@@ -99,12 +98,12 @@ cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "r
           ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
           parallel -C' ' --env deCODE --env p_gwas --env region '
              tabix ${deCODE}/{}.txt.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}"
-          ' | \
-          sort -k7,7 | \
-          join -17 -21 - <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3 | cut -f3,7) | \
-          cut -f1 --complement | \
-          sort -k1,1 -k2,2
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}" | \
+             sort -k7,7 | \
+             join -17 - <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3 | cut -f3,7) | \
+             cut -f1 --complement | \
+             sort -k1,1 -k2,2
+          '
        done
      ) > ${HbF}/work/deCODE.tsv
 
