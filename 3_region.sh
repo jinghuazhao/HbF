@@ -103,7 +103,7 @@ cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "r
           ' | \
           sort -k7,7 | \
           join -17 -23 - <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3) | \
-          cut -f1 --comlement | \
+          cut -f1 --complement | \
           sort -k1,1 -k2,2
        done
      ) > ${HbF}/work/deCODE.tsv
