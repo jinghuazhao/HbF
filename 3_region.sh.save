@@ -85,7 +85,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
 
 #3. deCODE
 export deCODE=${pgwas}/deCODE
-cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
+cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0}' ${deCODE}/deCODE.hdr) \
     <(
        sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g' | \
        while read -r chr pos rsid snpid gene
@@ -95,18 +95,20 @@ cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "r
           export rsid=${rsid}
           export snpid=${snpid}
           export gene=${gene}
-          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
-          ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
-          parallel -C' ' --env deCODE --env p_gwas --env region '
-             tabix ${deCODE}/{}.txt.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}"
-          ' | \
-          sort -k7,7 | \
-          join -17 -23 - <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3) | \
-          cut -f1 --comlement | \
-          sort -k1,1 -k2,2
+          ls ${deCODE}/*gz | xargs -l basename | sed 's/.txt.gz//' | \
+          parallel -C' ' -j15 --env deCODE --env chr --env pos --env M --env p_gwas '
+             gunzip -c ${deCODE}/{}.txt.gz | \
+             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v chr=chr${chr} -v pos=${pos} -v M=${M} -v p=${p_gwas} -v OFS="\t" "
+                 \$8<=p&&\$1==chr&&\$2>=pos-M&&\$2<=pos+M{print rsid,snpid,gene,id,\$0}"
+          '
        done
      ) > ${HbF}/work/deCODE.tsv
+sed '1d' ${HbF}/work/deCODE.tsv | \
+sort -k5,5 -k6,6n | \
+cut -f5,6 | \
+uniq | \
+awk '{print $1":"$2"-"$2}' | \
+xargs -l tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz {} > ${HbF}/work/deCODE
 
 #4. Fenland
 export Fenland=${pgwas}/Fenland

@@ -34,7 +34,10 @@ function all()
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $9 == rsid {print $1,study,$4,$6,$7,$8,$11,$10,$13,$16,$17,$19}' ${f}
          ;;
        deCODE)
-         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $8 == rsid {print $1,study,$4,"NA",$5,$6,$9,$10,"NA",$11,$14,$12}' ${f}
+         awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $8 == rsid {
+             split($4,id,"_");
+             print $1,study,id[1]"_"id[2],id[3],$5,$6,$9,$10,"NA",$11,$14,$12
+         }' ${f}
          ;;
        Fenland)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $6 == rsid {print $1,study,$14,"NA",$4,$5,$8,$9,$10,$15,$16,$17}' ${f} | \
