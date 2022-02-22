@@ -59,7 +59,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","GCST","Symbol",$0
        done
      ) > ${HbF}/work/AGES.tsv
 
-#2. ARIC, https://sites.cscc.unc.edu/aric/, build 38
+#2. ARIC, https://sites.cscc.unc.edu/aric/, GRCh38
 export ARIC=${pgwas}/ARIC
 ls ${ARIC}/EA/*gz | parallel -C' ' -j15 'tabix -S1 -s1 -b2 -e2 -f {}'
 cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol",$0}' ${ARIC}/glm.linear.hdr) \
@@ -83,11 +83,11 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
         done
       ) > ${HbF}/work/ARIC.tsv
 
-#3. deCODE
+#3. deCODE, https://download.decode.is, GRCh38
 export deCODE=${pgwas}/deCODE
 cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
     <(
-       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,2,4,11,13 | sed 's/, /;/g')
+       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,11,13 | sed 's/, /;/g')
        do
           export chr=${chr}
           export pos=${pos}
@@ -210,7 +210,7 @@ cat <(gunzip -c ${INTERVAL}/BACH2.12756.3.3/BACH2.12756.3.3_chrom_6_meta_1.tbl.g
        done
      ) > ${HbF}/work/INTERVAL.tsv
 
-#7. GTEx, eQTL Catalog, build 38
+#7. GTEx, eQTL Catalog, GRCh38
 export GTEx=~/rds/public_databases/GTEx/csv
 export eQTLCatalogue=~/rds/public_databases/eQTLCatalogue
 Rscript -e '
