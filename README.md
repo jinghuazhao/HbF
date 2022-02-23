@@ -23,6 +23,6 @@ upon completion.
 
 ## Flanking windows
 
-This is set by `M`, and results for M=1Mb are contained in the **regions/** directory. When M=0, we have another direct pQTL lookup.
+This is set by `M`, and testing results for M=1Mb are contained in the **regions/** directory. When M=0, we have another direct pQTL lookup.
 
 Results are in tsv format of named cohorts.
