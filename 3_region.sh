@@ -87,7 +87,7 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
 export deCODE=${pgwas}/deCODE
 cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
     <(
-       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,11,13 | sed 's/, /;/g')
+       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | sed 's/, /;/g')
        do
           export chr=${chr}
           export pos=${pos}
@@ -96,7 +96,7 @@ cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "r
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
           ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
-          parallel -C' ' --env deCODE --env p_gwas --env region '
+          parallel -C' ' -j15 --env deCODE --env p_gwas --env region '
              tabix ${deCODE}/{}.txt.gz ${region} | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}" | \
              sort -k7,7 | \
