@@ -85,27 +85,39 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
 
 #3. deCODE, https://download.decode.is, GRCh38
 export deCODE=${pgwas}/deCODE
+(
+  while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | sed 's/, /;/g')
+  do
+      export chr=${chr}
+      export pos=${pos}
+      export rsid=${rsid}
+      export snpid=${snpid}
+      export gene=${gene}
+      export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
+      ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
+      parallel -C' ' -j15 --env deCODE --env p_gwas --env region '
+          tabix ${deCODE}/{}.txt.gz ${region} | \
+          awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}"
+      '
+  done
+) > ${HbF}/work/deCODE.sumstats
+(
+  while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | sed 's/, /;/g')
+  do
+      export chr=${chr}
+      export pos=${pos}
+      export rsid=${rsid}
+      export snpid=${snpid}
+      export gene=${gene}
+      export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
+      ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
+      parallel -C' ' -j15 --env deCODE --env region 'tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region}'
+  done
+)> ${HbF}/work/deCODE.annotate
 cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
-    <(
-       while read chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | sed 's/, /;/g')
-       do
-          export chr=${chr}
-          export pos=${pos}
-          export rsid=${rsid}
-          export snpid=${snpid}
-          export gene=${gene}
-          export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
-          ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
-          parallel -C' ' -j15 --env deCODE --env p_gwas --env region '
-             tabix ${deCODE}/{}.txt.gz ${region} | \
-             awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}" | \
-             sort -k7,7 | \
-             join -17 - -t"$(echo -e "\t")" <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3 | cut -f3,7) | \
-             cut -f1 --complement | \
-             sort -k1,1 -k2,2
-          '
-       done
-     ) > ${HbF}/work/deCODE.tsv
+    <(sort -k7,7 ${HbF}/work/deCODE.sumstats | join -17 - -t"$(echo -e "\t")" <(cut -f3,7 ${HbF}/work/deCODE.annotate | sort -k1,1) | \
+      cut -f1 --complement | sort -k1,1 -k2,2) \
+> ${HbF}/work/deCODE.tsv
 
 #4. Fenland
 export Fenland=${pgwas}/Fenland
