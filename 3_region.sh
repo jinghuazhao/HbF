@@ -100,7 +100,7 @@ cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "r
              tabix ${deCODE}/{}.txt.gz ${region} | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}" | \
              sort -k7,7 | \
-             join -17 - <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3 | cut -f3,7) | \
+             join -17 - -t"$(echo -e "\t")" <(tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | sort -k3,3 | cut -f3,7) | \
              cut -f1 --complement | \
              sort -k1,1 -k2,2
           '
