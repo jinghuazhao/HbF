@@ -10,6 +10,7 @@ File | Description             | Comment
 1_make_variant_list.R | Data preparation |
 2_lookup.sh | Direct pQTL/Gene lookup |
 3_region.sh | Regional lookup |
+3_deCODE.sh | ... for deCODE |
 4_aggregate.sh | Meta-data |
 5_coloc.sh | Colocalisation analysis | to be revised
 
