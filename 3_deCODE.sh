@@ -42,7 +42,7 @@ function extract()
     tabix ${deCODE}/${id}.txt.gz ${region} | \
     awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id=${id} -v p=${p_gwas} -v OFS="\t" "rsid==\$4&&\$8<=p{print rsid,snpid,gene,id,\$0}"
   '
-  ) > ${HbF}/work/deCODE-${id}
+  ) > ${HbF}/deCODE/deCODE-${id}
 }
 
 extract

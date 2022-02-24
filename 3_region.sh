@@ -93,22 +93,8 @@ export deCODE=${pgwas}/deCODE
       sort -k1,1
   done
 )> ${HbF}/work/deCODE.annotate
-(
-  while read -r chr pos rsid snpid gene < <(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3,4,12,13 | grep -v NA | sed 's/, /;/g')
-  do
-      export chr=${chr}
-      export pos=${pos}
-      export rsid=${rsid}
-      export snpid=${snpid}
-      export gene=${gene}
-      export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print "chr"chr":"pos-M"-"pos+M}')
-      ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | \
-      parallel -C' ' -j15 --env deCODE --env p_gwas --env region '
-          tabix ${deCODE}/{}.txt.gz ${region} | \
-          awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$8<=p{print rsid,snpid,gene,id,\$0}"
-      '
-  done
-) > ${HbF}/work/deCODE.sumstats
+sbatch --wait 3_deCODE.sh
+ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | parallel -C' ' -j15 'cat ${HbF}/deCODE/deCODE-{}' > ${HbF}/work/deCODE.sumstats
 cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
     <(sort -k7,7 ${HbF}/work/deCODE.sumstats | join -17 - -t"$(echo -e "\t")" ${HbF}/work/deCODE.annotate | cut -f1 --complement | sort -k1,1 -k2,2) \
 > ${HbF}/work/deCODE.tsv
