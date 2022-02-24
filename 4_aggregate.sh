@@ -104,12 +104,12 @@ Rscript -e '
   all[eQTLGen,"beta"] <- bse[eQTLGen,"b"]
   all[eQTLGen,"se"] <- bse[eQTLGen,"se"]
   sig <- subset(all,p<=1e-5)
-  write.table(sig,file.path(HbF,"work","sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE)
+  write.table(sig,file.path(HbF,"work","sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")
   sig <- mutate(sig,rsid_gene=paste0(rsid,"-",gene))
   all_sig <- mutate(all,rsid_gene=paste0(rsid,"-",gene)) %>%
              filter(rsid_gene %in% sig$rsid_gene) %>%
              select(-rsid_gene)
-  write.table(all_sig,file.path(HbF,"work","all-sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE)
+  write.table(all_sig,file.path(HbF,"work","all-sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")
 '
 
 function annotate()
