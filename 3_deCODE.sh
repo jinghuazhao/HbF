@@ -12,9 +12,6 @@
 #SBATCH --export ALL
 
 export TMPDIR=/rds/user/jhz22/hpc-work/work
-
-module load gcc/6
-
 export HbF=${HOME}/COVID-19/HbF
 export pgwas=~/rds/results/public/proteomics
 export M=0
