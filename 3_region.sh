@@ -269,7 +269,7 @@ cat <(gunzip -c ${eQTLGen}/cis_full.txt.gz | head -1 |
           export snpid=${snpid}
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
-          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M --env p_gwas '
+          parallel -C' ' -j15 --env eQTLGen --env chr --env pos --env M --env p_gwas '
              tabix ${eQTLGen}/{}.txt.gz ${region} | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$1<=p{print rsid,snpid,gene,id,\$0}"
           ' ::: cis_full
@@ -287,7 +287,7 @@ cat <(gunzip -c ${eQTLGen}/trans.txt.gz | head -1 |
           export snpid=${snpid}
           export gene=${gene}
           export region=$(awk -vchr=${chr} -vpos=${pos} -vM=${M} 'BEGIN{print chr":"pos-M"-"pos+M}')
-          parallel -C' ' -j15 --env INTERVAL --env chr --env pos --env M --env p_gwas '
+          parallel -C' ' -j15 --env eQTLGen --env chr --env pos --env M --env p_gwas '
              tabix ${eQTLGen}/{}.txt.gz ${region} | \
              awk -v rsid=${rsid} -v snpid=${snpid} -v gene=${gene} -v id={} -v p=${p_gwas} -v OFS="\t" "\$1<=p{print rsid,snpid,gene,id,\$0}"
           ' ::: trans
