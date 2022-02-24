@@ -85,17 +85,15 @@ cat <(awk -v OFS="\t" '{print "rsid","snpid","Gene","Somamer","Uniprot","Symbol"
 
 #3. deCODE, https://download.decode.is, GRCh38
 export deCODE=${pgwas}/deCODE
+sbatch --wait 3_deCODE.sh
+ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | parallel -C' ' -j15 'cat ${HbF}/deCODE/deCODE-{}' > ${HbF}/work/deCODE.sumstats
 (
   for region in $(sed '1d' ${HbF}/work/hbf_hits.txt | cut -f1,3 | grep -v NA | sed 's/, /;/g' | awk '{print "chr"$1":"$2"-"$2}')
   do
-      tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region} | \
-      cut -f3,7 | \
-      sort -k1,1
+      tabix $deCODE/doc/bgzip/assocvariants.annotated.txt.gz ${region}
   done
-)> ${HbF}/work/deCODE.annotate
-sbatch --wait 3_deCODE.sh
-ls ${deCODE}/*gz | xargs -l basename -s .txt.gz | parallel -C' ' -j15 'cat ${HbF}/deCODE/deCODE-{}' > ${HbF}/work/deCODE.sumstats
-cat <(cut -f7 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
+) | cut -f3,7 | sort -k1,1 > ${HbF}/work/deCODE.annotate
+cat <(cut -f3 --complement ${deCODE}/doc/deCODE.hdr | awk -v OFS="\t" '{print "rsid","snpid","Gene","id",$0,"EAF"}') \
     <(sort -k7,7 ${HbF}/work/deCODE.sumstats | join -17 - -t"$(echo -e "\t")" ${HbF}/work/deCODE.annotate | cut -f1 --complement | sort -k1,1 -k2,2) \
 > ${HbF}/work/deCODE.tsv
 
