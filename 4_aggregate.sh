@@ -35,7 +35,7 @@ function all()
          ;;
        deCODE)
          awk -v study=${study} -v rsid=${rsid} -v OFS='\t' '$1 == rsid && $7 == rsid {
-             split($4,id,"_");chr=gsub(/chr/,"",$5)
+             split($4,id,"_");chr=gsub(/chr/,"",$5);
              print $1,study,id[1]"_"id[2],id[3],chr,$6,$8,$9,$16,$10,$13,$11
          }' ${f}
          ;;
@@ -98,18 +98,24 @@ Rscript -e '
   suppressMessages(library(pQTLtools))
   suppressMessages(library(dplyr))
   HbF <- Sys.getenv("HbF")
-  all <- read.delim(file.path(HbF,"work","all.tsv"))
+  hbf_hits <- read.delim(file.path(HbF,"work","hbf_hits.txt")) %>%
+              select(BP,rs.ID)
+  all <- read.delim(file.path(HbF,"work","all.tsv")) %>%
+         left_join(hbf_hits,by=c('rsid'='rs.ID')) %>%
+         mutate(pos=if_else(study%in%c("ARIC","deCODE","GTEx","eQTL"),BP,pos)) %>%
+         arrange(rsid,gene) %>%
+         select(-BP)
   bse <- with(all,as.data.frame(gap::get_b_se(eaf,se,beta)))
   eQTLGen <- with(all,substr(study,1,7)=="eQTLGen")
   all[eQTLGen,"beta"] <- bse[eQTLGen,"b"]
   all[eQTLGen,"se"] <- bse[eQTLGen,"se"]
   sig <- subset(all,p<=1e-5)
-  write.table(sig,file.path(HbF,"work","sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")
+  write.table(sig,file.path(HbF,"work","sig.tsv"),row.names=FALSE,quote=FALSE,sep="\t")
   sig <- mutate(sig,rsid_gene=paste0(rsid,"-",gene))
   all_sig <- mutate(all,rsid_gene=paste0(rsid,"-",gene)) %>%
              filter(rsid_gene %in% sig$rsid_gene) %>%
              select(-rsid_gene)
-  write.table(all_sig,file.path(HbF,"work","all-sig.tsv"),row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")
+  write.table(all_sig,file.path(HbF,"work","all-sig.tsv"),row.names=FALSE,quote=FALSE,sep="\t")
 '
 
 function annotate()
